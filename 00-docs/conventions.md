@@ -66,7 +66,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 - **Reviews:** Athena's PRs need Stan's approval as CODEOWNER. Stan's own PRs and Renovate's allow-listed auto-merges bypass approval, but **never** bypass the PR requirement or the `validate` check.
 - **Repo settings and rulesets are code** in `.github/settings/`. Apply them with `mise run github:apply` and check them with `mise run github:diff`. Never click-change them in the GitHub UI.
 - **Actions** must be pinned to a full commit SHA, and only allow-listed actions may run.
-- **The repo is public** ([ADR-0027](decisions/0027-public-repository.md)). Commits, PRs, and issues must never contain plaintext secrets, personal email addresses, or unfixed security weaknesses. Push protection is on.
+- **The repo is public** ([ADR-0027](decisions/0027-public-repository.md)). Commits, PRs, and issues must never contain plaintext secrets, credentials, or unfixed security weaknesses. Push protection is on.
 - **PR body:** Why, What changed, Impact checklist, `No doc change:` lines, How verified, Learn more.
 
 ## Tooling ([ADR-0006](decisions/0006-tooling-mise.md))

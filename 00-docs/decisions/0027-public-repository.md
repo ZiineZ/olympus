@@ -24,11 +24,10 @@ The design already assumed the repo might be public: every secret is SOPS-encryp
    - **Fork pull requests from outside contributors need approval before any workflow runs** (`all_external_contributors`).
    - Unchanged: Dependabot alerts on; Dependabot security-update PRs off, because Renovate is the single version writer.
 3. **Discovery:** topics `k8s-at-home` and `kubesearch` are added, so kubesearch.dev can index the repo. *Verify that kubesearch picks it up.*
-4. **What is public, and is fine to be:** the design, the ADRs, the domain, the tailnet name, the private LAN plan, and Stan's name and GitHub login.
+4. **What is public, and is fine to be:** the design, the ADRs, the domain, the tailnet name, the private LAN plan, and Stan's name, GitHub login, and personal email. GitHub-side merges carry the account's default email; Stan accepted that on 2026-10-20 rather than rewriting history. Local commits still use the no-reply address.
 5. **What is never public:**
    - **Plaintext secrets of any kind.** `*.sops.yaml` files are encrypted; their key names remain readable.
    - **Credentials:** age keys, talosconfig, kubeconfigs (git-ignored), Tailscale auth keys, the restic password.
-   - **Personal email addresses:** commits use the GitHub no-reply address, and GitHub-side merges use it too, once "Keep my email addresses private" is on.
    - **Unfixed security weaknesses** (see rule 6).
 6. **Issues and PRs are public as well.** The `audit` skill reports security-relevant findings (RBAC too broad, a missing egress policy, exposed services) only to Stan, in chat or as a private draft security advisory. **They never go in a public issue.** Logs pasted into issues or PRs must be scrubbed of tokens, IPs outside the documented plan, and personal data.
 
