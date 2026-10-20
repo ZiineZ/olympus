@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://json.schemastore.org/any.json
+# Co-change rules (ADR-0004), enforced by `.github/checks/check.py --pr`.
+#
+# A rule fires when the PR changes a `when` path, adds a `when_added` path, or deletes a
+# `when_removed` path. Then every `require` glob must match a file changed in the same PR,
+# and at least one `require_any` glob must. The only bypass is one line per glob in the PR body:
+#   No doc change: <glob> — <reason>
+# Globs: `*` stays within one path segment, `**` spans any depth.
+# Per-component rules come from each ks.yaml's `olympus/docs` annotation (added with the first component).
+rules:
+  - name: platform-component-added
+    when_added: ["04-platform/*/*/ks.yaml"]
+    require: ["00-docs/decisions/*.md", "00-docs/architecture.md", ".github/README.md"]
+
+  - name: platform-component-removed
+    when_removed: ["04-platform/*/*/ks.yaml"]
+    require: ["00-docs/architecture.md", ".github/README.md"]
+
+  - name: app-added-or-removed
+    when_added: ["05-apps/*/ks.yaml"]
+    when_removed: ["05-apps/*/ks.yaml"]
+    require: ["00-docs/architecture.md"]
+
+  - name: talos-config
+    when: ["01-talos/**"]
+    require: ["00-docs/runbooks/**"]
+
+  - name: new-adr-updates-living-docs
+    when_added: ["00-docs/decisions/*.md"]
+    require_any: ["00-docs/conventions.md", "00-docs/architecture.md"]
+
+  - name: agent
+    when: ["04-platform/06-agent/**", ".claude/**"]
+    require: ["00-docs/architecture.md"]
+
+  - name: change-workflow-itself
+    when: [".github/checks/**", ".github/sync-rules.yaml", ".claude/skills/change/**"]
+    require: ["00-docs/conventions.md"]
+
+  - name: cluster-settings
+    when: ["03-cluster/cluster-settings.yaml"]
+    require: ["00-docs/architecture.md"]
+
+  - name: github-settings
+    when: [".github/settings/**"]
+    require_any: ["00-docs/decisions/*.md", "00-docs/conventions.md"]

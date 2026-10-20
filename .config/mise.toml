@@ -1,0 +1,23 @@
+# Pinned toolchain and the only imperative entrypoints (ADR-0006). Renovate bumps versions.
+# Tools join this file in the phase that first needs them; nothing is pre-added.
+
+[tools]
+python = "3.14.8"
+yq = "4.54.1"
+gh = "2.102.1"
+
+[tasks.check]
+description = "Repo checks (ADR-0004). Same as CI on push."
+run = "python3 .github/checks/check.py"
+
+[tasks."check:pr"]
+description = "Repo + PR checks: sync rules, PR title. Needs BASE_REF, PR_TITLE, PR_BODY."
+run = "python3 .github/checks/check.py --pr"
+
+[tasks."github:apply"]
+description = "Apply .github/settings/ to the GitHub repo (Stan, admin token)."
+run = "python3 .github/settings/apply.py apply"
+
+[tasks."github:diff"]
+description = "Show drift between .github/settings/ and the live GitHub repo."
+run = "python3 .github/settings/apply.py diff"

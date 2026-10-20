@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+# The required status check `validate` (ADR-0004, ADR-0005). Same commands as `mise run check[:pr]`.
+name: validate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited] # `edited`: re-check when the PR title/body changes
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # sync rules diff against the base branch
+          persist-credentials: false
+
+      - uses: jdx/mise-action@fc42bcc7ddbf51124c30f95a877a0c5168a3bfde # v5.2.1
+        with:
+          version: 2026.10.15
+
+      - name: Self-test
+        run: python3 .github/checks/check.py --selftest
+
+      - name: Repo checks
+        if: github.event_name == 'push'
+        run: mise run check
+
+      - name: Repo + PR checks
+        if: github.event_name == 'pull_request'
+        env: # passed as env, never interpolated into the script (no injection via PR title/body)
+          BASE_REF: ${{ github.base_ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: mise run check:pr
