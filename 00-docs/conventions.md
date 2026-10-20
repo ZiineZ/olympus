@@ -103,7 +103,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
   - HelmReleases reconcile every 30m, with `driftDetection: enabled`.
 - **Charts** come from `OCIRepository`, pinned and verified with cosign wherever the publisher signs them. There is no image automation.
 - **Secrets:** every `Secret` lives in a `*.sops.yaml` file next to the component that uses it. Secret Helm values are passed through `valuesFrom`.
-- **The age key** is kept in Stan's password manager and on paper. It never goes in the cluster, CI, or Athena.
+- **The age key** is kept in Stan's password manager and on paper. It never goes in the cluster, CI, or Athena. Its public key is the single recipient in `.sops.yaml`. Anyone can **encrypt** with it, Athena included; only Stan can **decrypt**.
 - **Bootstrap** reads versions and values from the same files Flux uses. It runs once per cluster build.
 
 ## Data ([ADR-0016](decisions/0016-storage-local-path.md), [ADR-0017](decisions/0017-backups-k8up.md))

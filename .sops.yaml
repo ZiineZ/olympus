@@ -1,0 +1,11 @@
+# SOPS creation rules (ADR-0014). First match wins. One recipient: Stan's age key.
+# The private key lives only in Stan's password manager, on paper, and at $SOPS_AGE_KEY_FILE.
+creation_rules:
+  # Talos secrets are not Kubernetes objects: encrypt every value.
+  - path_regex: 01-talos/.*\.sops\.yaml$
+    age: age1axnvv6sge9dx97peq2ks39a3smdtggas8cdasaaxtl0un3ck4pzsndgmku
+
+  # Kubernetes Secrets: encrypt only data/stringData, so metadata stays reviewable.
+  - path_regex: \.sops\.yaml$
+    encrypted_regex: ^(data|stringData)$
+    age: age1axnvv6sge9dx97peq2ks39a3smdtggas8cdasaaxtl0un3ck4pzsndgmku
