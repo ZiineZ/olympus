@@ -72,7 +72,9 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 ## Tooling ([ADR-0006](decisions/0006-tooling-mise.md))
 
 - `mise install` provides the whole toolchain.
-- **mise tasks are the only imperative entrypoints:** `talos:genconfig`, `talos:apply`, `talos:diff`, `talos:bootstrap`, `bootstrap:apps`, `check`, `impact`, `docs:gen`.
+- **mise tasks are the only imperative entrypoints.** `mise tasks` lists the ones that exist today. They are defined only in `.config/mise.toml`, and each task is added in the phase that first needs it (target set: ADR-0006).
+- **A tool joins `.config/mise.toml` in the phase that first needs it.** `.config/mise.lock` pins checksums for linux-x64, macos-arm64, and macos-x64. Regenerate it with `mise lock --platform linux-x64,macos-arm64,macos-x64` whenever a version changes.
+- **CI installs only `python` and `yq`.**
 - Check scripts use the Python standard library only.
 
 ## Nodes ([ADR-0007](decisions/0007-operating-system-talos-linux.md), [ADR-0008](decisions/0008-cluster-topology-and-versions.md), [ADR-0009](decisions/0009-network-addressing-and-hardware.md))
