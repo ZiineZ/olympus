@@ -22,9 +22,10 @@ def gh(method, path, body=None, missing_ok=False):
         cmd += ["--input", "-"]
     r = subprocess.run(cmd, input=None if body is None else json.dumps(body), capture_output=True, text=True)
     if r.returncode != 0:
-        # 404: feature off (e.g. vulnerability alerts); 409: selected-actions while all actions are allowed
-        status = "404" if "HTTP 404" in r.stderr else (json.loads(r.stdout or "{}").get("status") if r.stdout.startswith("{") else None)
-        if missing_ok and status in ("404", "409"):
+        # 404: feature off (e.g. vulnerability alerts); 409: selected-actions while all actions are allowed;
+        # 403/422: feature unavailable at the current visibility (code scanning, fork approval on a private repo)
+        status = json.loads(r.stdout).get("status") if r.stdout.startswith("{") else None
+        if missing_ok and (status in ("403", "404", "409", "422") or "HTTP 404" in r.stderr):
             return None
         sys.exit(f"gh api {method} {path} failed:\n{r.stdout}{r.stderr}")
     return json.loads(r.stdout) if r.stdout.strip() else {}
@@ -55,8 +56,14 @@ def live(repo):
     rulesets = {}
     for summary in gh("GET", f"/repos/{repo}/rulesets?includes_parents=false"):
         rulesets[summary["name"]] = gh("GET", f"/repos/{repo}/rulesets/{summary['id']}")
+    info = gh("GET", f"/repos/{repo}")
+    pvr = gh("GET", f"/repos/{repo}/private-vulnerability-reporting", missing_ok=True) or {}
     return {
-        "repo": gh("GET", f"/repos/{repo}"),
+        "repo": info,
+        "security_and_analysis": info.get("security_and_analysis"),
+        "code_scanning_default_setup": gh("GET", f"/repos/{repo}/code-scanning/default-setup", missing_ok=True),
+        "private_vulnerability_reporting": bool(pvr.get("enabled", False)),
+        "fork_pr_approval": gh("GET", f"/repos/{repo}/actions/permissions/fork-pr-contributor-approval", missing_ok=True),
         "topics": gh("GET", f"/repos/{repo}/topics")["names"],
         "actions": gh("GET", f"/repos/{repo}/actions/permissions"),
         "selected_actions": gh("GET", f"/repos/{repo}/actions/permissions/selected-actions", missing_ok=True),
@@ -81,7 +88,11 @@ def report(repo):
 
 def apply(repo, have):
     s = SETTINGS
-    gh("PATCH", f"/repos/{repo}", s["repo"])
+    gh("PATCH", f"/repos/{repo}", s["repo"])  # visibility first: the features below depend on it
+    gh("PATCH", f"/repos/{repo}", {"security_and_analysis": s["security_and_analysis"]})
+    gh("PATCH", f"/repos/{repo}/code-scanning/default-setup", s["code_scanning_default_setup"])
+    gh("PUT" if s["private_vulnerability_reporting"] else "DELETE", f"/repos/{repo}/private-vulnerability-reporting")
+    gh("PUT", f"/repos/{repo}/actions/permissions/fork-pr-contributor-approval", s["fork_pr_approval"])
     gh("PUT", f"/repos/{repo}/topics", {"names": s["topics"]})
     gh("PUT", f"/repos/{repo}/actions/permissions", s["actions"])
     gh("PUT", f"/repos/{repo}/actions/permissions/selected-actions", s["selected_actions"])

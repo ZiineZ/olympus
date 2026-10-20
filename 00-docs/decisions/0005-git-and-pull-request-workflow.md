@@ -1,6 +1,6 @@
 # ADR-0005: Git and pull request workflow
 
-- **Status:** Accepted
+- **Status:** Accepted (rule 7 superseded by ADR-0027)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0004, ADR-0023, ADR-0024

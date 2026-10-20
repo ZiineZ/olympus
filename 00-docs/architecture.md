@@ -138,7 +138,7 @@ None yet. Phase 1 is the platform only. Apps arrive one per PR through the `add-
 |---|---|---|
 | age private key, restic password | they are the keys to everything else | password manager + paper ([ADR-0014](decisions/0014-secrets-sops-age.md)) |
 | Cloudflare Access apps and policies | not yet managed as code | `runbooks/03-core.md` (deferred: OpenTofu) |
-| GitHub App installs (Renovate, Athena), Student Pack (Pro, renew before 2027-06-14) | GitHub account UI | `runbooks/00-prep.md`. Rulesets and repo settings themselves are code in `.github/settings/` |
+| GitHub App installs (Renovate, Athena) | GitHub account UI | `runbooks/00-prep.md`. Rulesets and repo settings themselves are code in `.github/settings/` |
 | healthchecks.io check | external service | `runbooks/04-observability.md` |
 | Router DHCP pool range | router UI | `runbooks/00-prep.md` |
 | BIOS settings (zeus, workers) | firmware | [ADR-0009](decisions/0009-network-addressing-and-hardware.md), `runbooks/08-add-node.md` |

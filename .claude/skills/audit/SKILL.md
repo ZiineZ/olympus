@@ -5,7 +5,7 @@ description: Periodic read-only review of the Olympus cluster and repo covering 
 
 # Audit (report only)
 
-**Output:** a GitHub issue titled `audit: <YYYY-MM-DD>` (or a chat report, if Stan prefers). Each finding is listed as: severity (🔴 act now / 🟠 this week / 🟢 nice to have), evidence, and a proposed action. **Never fix anything during an audit.** Fixes are separate PRs through `change`, one per finding, after Stan picks which ones.
+**Output:** a GitHub issue titled `audit: <YYYY-MM-DD>` (or a chat report, if Stan prefers). **The repo is public (ADR-0027 rule 6):** findings from §3 "Security posture" and anything exploitable go to Stan in chat, or into a private draft security advisory, **never into the public issue**. Scrub tokens and personal data from every excerpt. Each finding is listed as: severity (🔴 act now / 🟠 this week / 🟢 nice to have), evidence, and a proposed action. **Never fix anything during an audit.** Fixes are separate PRs through `change`, one per finding, after Stan picks which ones.
 
 ## 1. Drift and health
 

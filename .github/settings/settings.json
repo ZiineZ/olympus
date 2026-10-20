@@ -1,7 +1,7 @@
 {
   "repo": {
     "description": "Olympus: GitOps homelab Kubernetes on Talos Linux (Flux, Cilium, Kite), maintained with Athena.",
-    "private": true,
+    "private": false,
     "has_issues": true,
     "has_projects": false,
     "has_wiki": false,
@@ -24,7 +24,9 @@
     "cilium",
     "homelab",
     "sops",
-    "renovate"
+    "renovate",
+    "k8s-at-home",
+    "kubesearch"
   ],
   "actions": {
     "enabled": true,
@@ -65,5 +67,24 @@
       "color": "5319e7",
       "description": "Adds or supersedes an architecture decision record"
     }
-  ]
+  ],
+  "security_and_analysis": {
+    "secret_scanning": {
+      "status": "enabled"
+    },
+    "secret_scanning_push_protection": {
+      "status": "enabled"
+    }
+  },
+  "code_scanning_default_setup": {
+    "state": "configured",
+    "languages": [
+      "actions"
+    ],
+    "query_suite": "default"
+  },
+  "private_vulnerability_reporting": true,
+  "fork_pr_approval": {
+    "approval_policy": "all_external_contributors"
+  }
 }
