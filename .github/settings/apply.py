@@ -22,7 +22,9 @@ def gh(method, path, body=None, missing_ok=False):
         cmd += ["--input", "-"]
     r = subprocess.run(cmd, input=None if body is None else json.dumps(body), capture_output=True, text=True)
     if r.returncode != 0:
-        if missing_ok and "HTTP 404" in r.stderr:
+        # 404: feature off (e.g. vulnerability alerts); 409: selected-actions while all actions are allowed
+        status = "404" if "HTTP 404" in r.stderr else (json.loads(r.stdout or "{}").get("status") if r.stdout.startswith("{") else None)
+        if missing_ok and status in ("404", "409"):
             return None
         sys.exit(f"gh api {method} {path} failed:\n{r.stdout}{r.stderr}")
     return json.loads(r.stdout) if r.stdout.strip() else {}

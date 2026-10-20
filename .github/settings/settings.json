@@ -14,26 +14,56 @@
     "allow_auto_merge": true,
     "delete_branch_on_merge": true,
     "allow_update_branch": true,
-    "web_commit_signoff_required": false,
-    "security_and_analysis": {
-      "secret_scanning": { "status": "enabled" },
-      "secret_scanning_push_protection": { "status": "enabled" }
-    }
+    "web_commit_signoff_required": false
   },
-  "topics": ["kubernetes", "talos", "flux", "gitops", "cilium", "homelab", "sops", "renovate"],
-  "actions": { "enabled": true, "allowed_actions": "selected", "sha_pinning_required": true },
+  "topics": [
+    "kubernetes",
+    "talos",
+    "flux",
+    "gitops",
+    "cilium",
+    "homelab",
+    "sops",
+    "renovate"
+  ],
+  "actions": {
+    "enabled": true,
+    "allowed_actions": "selected",
+    "sha_pinning_required": true
+  },
   "selected_actions": {
     "github_owned_allowed": true,
     "verified_allowed": false,
-    "patterns_allowed": ["jdx/mise-action@*"]
+    "patterns_allowed": [
+      "jdx/mise-action@*"
+    ]
   },
-  "workflow_permissions": { "default_workflow_permissions": "read", "can_approve_pull_request_reviews": false },
+  "workflow_permissions": {
+    "default_workflow_permissions": "read",
+    "can_approve_pull_request_reviews": false
+  },
   "vulnerability_alerts": true,
   "automated_security_fixes": false,
   "labels": [
-    { "name": "breaking", "color": "d73a4a", "description": "Major or breaking upgrade: needs the upgrade skill's review" },
-    { "name": "dependencies", "color": "0366d6", "description": "Version bump (Renovate)" },
-    { "name": "audit", "color": "fbca04", "description": "Report from the audit skill" },
-    { "name": "adr", "color": "5319e7", "description": "Adds or supersedes an architecture decision record" }
+    {
+      "name": "breaking",
+      "color": "d73a4a",
+      "description": "Major or breaking upgrade: needs the upgrade skill's review"
+    },
+    {
+      "name": "dependencies",
+      "color": "0366d6",
+      "description": "Version bump (Renovate)"
+    },
+    {
+      "name": "audit",
+      "color": "fbca04",
+      "description": "Report from the audit skill"
+    },
+    {
+      "name": "adr",
+      "color": "5319e7",
+      "description": "Adds or supersedes an architecture decision record"
+    }
   ]
 }

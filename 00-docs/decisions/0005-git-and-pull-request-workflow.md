@@ -55,7 +55,7 @@ Git is the only way to change Olympus. The workflow must make history readable f
    - **Security:**
      - Dependabot *alerts* on. Renovate reads them.
      - Dependabot *security update PRs* off. Renovate is the single writer for versions (ADR-0001 principle 4).
-     - Secret scanning and push protection on, where the plan allows.
+     - Secret scanning and push protection are **not available** on private personal repos, even with Pro (GitHub returns 422; it's a paid add-on). The compensating control is CI: the `sops-encrypted` check, which rejects any `kind: Secret` outside an encrypted `*.sops.yaml`. It ships with the first secret.
    - **Labels:** exactly `breaking`, `dependencies`, `audit`, `adr`. GitHub's default labels are removed.
 9. **Commit signing:** not required for now (ADR-0026).
 
