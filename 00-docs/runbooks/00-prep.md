@@ -23,7 +23,9 @@ gh auth login
 - `mise install` reads `.config/mise.toml` and verifies every download against the checksums in `.config/mise.lock`. A checksum mismatch aborts the install, and that is the point.
 - **Success:** `mise doctor` reports no problems, and `talosctl version --client` and `kubectl version --client` print the versions pinned in `.config/mise.toml`.
 
-## 3. The age key (the key to every secret)
+## 3. The age key (the key to every secret) ✅
+
+Created 2026-10-21. Its public key is the only recipient in `.sops.yaml`. If you haven't yet, **do the two storage steps below**: this key cannot be regenerated, and without it every secret has to be recreated by hand.
 
 This creates the one identity that encrypts every secret in the repo (ADR-0014). **Do it on the Mac, and only once.**
 
