@@ -1,6 +1,6 @@
 # ADR-0019: Alerting: Alertmanager to ntfy, with an external dead man's switch
 
-- **Status:** Accepted
+- **Status:** Accepted (rule 1's bridge superseded by ADR-0033: ntfy's built-in template)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0013, ADR-0017, ADR-0018

@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrepository-source-v1.json
+# metrics-server publishes its chart only in a classic Helm repository (ADR-0013 rule 5).
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: metrics-server
+spec:
+  interval: 1h
+  url: https://kubernetes-sigs.github.io/metrics-server/

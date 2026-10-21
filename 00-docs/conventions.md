@@ -108,6 +108,8 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 - **Charts** come from `OCIRepository`, pinned and verified with cosign wherever the publisher signs them. There is no image automation.
 - **Secrets:** every `Secret` lives in a `*.sops.yaml` file next to the component that uses it. Secret Helm values are passed through `valuesFrom`.
 - **Secrets are created and rotated only with `mise run secret:new <file> <namespace> <name> KEY…`.** It prompts for each value with hidden input (or reads `KEY=@file`), and pipes it straight into `sops`. Plaintext never touches disk, the command line or a chat. The `sops-encrypted` check rejects an unencrypted value, or a `Secret` outside a `*.sops.yaml` file.
+- **After a rotation**, a pod that reads the Secret only at start needs a restart. In the same PR, bump `kubectl.kubernetes.io/restartedAt` in the release's `podAnnotations` (the key `kubectl rollout restart` uses), so the restart goes through git too.
+- **Values passed with `valuesFrom.targetPath`** go through Helm's `--set` parser, so they must not contain `,` or `\`.
 - **The age key** is kept in Stan's password manager and on paper. It never goes in the cluster, CI, or Athena. Its public key is the single recipient in `.sops.yaml`. Anyone can **encrypt** with it, Athena included; only Stan can **decrypt**.
 - **Bootstrap** reads versions and values from the same files Flux uses. It runs once per cluster build.
 
@@ -123,8 +125,9 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 
 - **Metrics:** the VictoriaMetrics stack. Alert rules and dashboards live in the folder of the component they watch.
 - **Grafana dashboards** come from git only, with `editable: false`.
-- **Alerts** go to ntfy and are outbound only. `Watchdog` pings healthchecks.io, which acts as the dead man's switch.
-- **Kite** runs in config-file mode with a read-only ServiceAccount.
+- **Alerts** go to ntfy via its built-in Alertmanager template, and are outbound only. `Watchdog` pings healthchecks.io, the dead man's switch. All three URLs live in the `alertmanager-receivers` Secret ([ADR-0033](decisions/0033-observability-layer-corrections.md)).
+- **Every remotely fetched rule and dashboard is pinned** to a tag or commit. The `render` check rejects floating `main`/`master` refs.
+- **Kite** runs in config-file mode with a read-only ServiceAccount (`view` + `olympus-cluster-read`). Its AI is off: Claude subscription credentials are allowed only in Claude Code, which is Athena.
 
 ## Admission and workloads ([ADR-0021](decisions/0021-admission-policy.md), [ADR-0022](decisions/0022-workload-standards.md))
 

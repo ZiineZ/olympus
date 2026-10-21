@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/ingress-networking-v1.json
+# Tailnet-only UIs (ADR-0011 tier 2): grafana, alertmanager and vmui.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana
+spec:
+  ingressClassName: tailscale
+  defaultBackend: {service: {name: grafana, port: {number: 80}}}
+  tls:
+    - hosts: ["grafana${TS_HOST_SUFFIX}"]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alertmanager
+spec:
+  ingressClassName: tailscale
+  defaultBackend: {service: {name: alertmanager-ui, port: {number: 9093}}}
+  tls:
+    - hosts: ["alertmanager${TS_HOST_SUFFIX}"]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vmui
+spec:
+  ingressClassName: tailscale
+  defaultBackend: {service: {name: vmsingle-vm, port: {number: 8428}}}
+  tls:
+    - hosts: ["vmui${TS_HOST_SUFFIX}"]
+---
+# The operator's own Alertmanager Service is headless; a Tailscale Ingress needs a ClusterIP to point at.
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager-ui
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: vmalertmanager
+    app.kubernetes.io/instance: vm
+  ports:
+    - {name: http, port: 9093, targetPort: 9093}
