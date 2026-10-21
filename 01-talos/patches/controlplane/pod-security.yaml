@@ -1,6 +1,8 @@
 # Cluster-scoped documents: Talos 1.14 allows these on control-plane machines only.
 # Cluster-wide Pod Security default is `restricted` (ADR-0021). Namespaces that need less say so
 # with a label in their namespace.yaml; every exception is listed in 00-docs/conventions.md.
+# Talos already exempts kube-system. Patches *append* to lists, so restating it duplicates the entry
+# and the API server refuses to start (found in the rehearsal, 2026-10-21).
 apiVersion: v1alpha1
 kind: KubeAdmissionControlConfig
 name: PodSecurity
@@ -14,5 +16,3 @@ configuration:
     audit-version: latest
     warn: restricted
     warn-version: latest
-  exemptions:
-    namespaces: [kube-system]

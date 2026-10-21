@@ -82,6 +82,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 - **Talos only.** Configuration is applied only through mise tasks. There is no SSH and no hand-made patches.
 - **Talos config is rendered by `talosctl` alone** ([ADR-0028](decisions/0028-talos-config-with-talosctl.md)). `01-talos/cluster.yaml` holds versions and nodes. Patches apply by folder: `patches/global` to every node, `patches/<role>` to that role. Each image is defined in `schematics/<name>.yaml`.
 - **Patches use only Talos 1.14 config documents**, never the deprecated `v1alpha1` fields. Cluster-scoped documents belong in `patches/controlplane/`.
+- **Talos patches append to lists; they don't replace them.** Never restate a list entry Talos already sets by default: a duplicate can stop a component from starting. Remove an entry with `$patch: delete`.
 - **Image schematics:** `zeus`, `amd`, `intel`. Every node has wired Ethernet.
 - **No swap.** Kubelet reservations and eviction thresholds are set in `patches/`.
 - **The API endpoint is always the VIP** (`${CLUSTER_API_VIP}`), never a node IP.
