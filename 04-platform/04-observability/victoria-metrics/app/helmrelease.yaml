@@ -87,7 +87,7 @@ spec:
     grafana:
       fullnameOverride: grafana
       priorityClassName: platform
-      resources: {requests: {cpu: 50m, memory: 256Mi}, limits: {memory: 256Mi}}
+      resources: {requests: {cpu: 50m, memory: 512Mi}, limits: {memory: 512Mi}} # 256Mi was OOMKilled in the rehearsal (dashboard index)
       persistence:
         enabled: false # dashboards come only from git (ADR-0018): nothing to keep
       grafana.ini:

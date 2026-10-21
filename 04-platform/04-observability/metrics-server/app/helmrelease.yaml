@@ -17,5 +17,3 @@ spec:
       # Talos kubelets serve self-signed certificates; traffic stays inside the cluster (ADR-0033)
       - --kubelet-insecure-tls
     resources: {requests: {cpu: 20m, memory: 128Mi}, limits: {memory: 128Mi}}
-    podLabels:
-      app.kubernetes.io/name: metrics-server

@@ -295,6 +295,13 @@ def check_render(files):
                 errs.append(f"{path}: helm template {name}: {tpl.stderr.strip().splitlines()[-1]}")
                 continue
             errs += [f"{path} (helm {name}): floating ref {m.group(0)} (pin a tag or commit, ADR-0033)" for m in FLOATING_REF_RE.finditer(tpl.stdout)]
+            # Flux post-renders every chart through kustomize, which rejects e.g. duplicate keys that helm lets through
+            post = tempfile.mkdtemp(prefix="olympus-post-")
+            (Path(post) / "out.yaml").write_text(tpl.stdout)
+            (Path(post) / "kustomization.yaml").write_text("resources: [out.yaml]\n")
+            kz = subprocess.run(["kustomize", "build", post], capture_output=True, text=True)
+            if kz.returncode:
+                errs.append(f"{path} (helm {name}): post-render (kustomize) fails: {kz.stderr.strip().splitlines()[-1]}")
             check = subprocess.run(KUBECONFORM, input=tpl.stdout, capture_output=True, text=True)
             if check.returncode:
                 errs += [f"{path} (helm {name}): {l}" for l in check.stdout.splitlines() if "is invalid" in l][:10]

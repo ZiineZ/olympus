@@ -38,8 +38,6 @@ spec:
             size: 1Gi
     nodeSelector:
       olympus/tier: heavy
-    podLabels:
-      app.kubernetes.io/name: kite
     podSecurityContext:
       runAsNonRoot: true
       runAsUser: 1000 # the backup pods' UID (03-cluster/components/backup)
