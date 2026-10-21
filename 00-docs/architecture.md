@@ -80,6 +80,11 @@ kubectl:  Stan's device (tailnet) → olympus-k8s.<tailnet>.ts.net (API proxy, i
 Talos:    Stan's Mac → zeus over the LAN or the tailnet (Talos tailscale extension) → Talos API
 ```
 
+- **On the tailnet today:** `hubble` (Hubble UI), `flux` (Flux Web UI), and `olympus-k8s` (the API server proxy). Each is a Tailscale Ingress next to its component, and the operator gives each one a `tag:k8s` proxy.
+- **Read-only by default:** the Flux Web UI acts as `olympus:viewers` for every visitor, so its buttons can't change anything.
+- **No outbound reach for proxies:** tagged proxies can be reached but can't initiate connections (`tailnet-policy.hujson`).
+- **Public routes:** reach the Gateway only from namespaces labelled `olympus/gateway-access: public`. external-dns writes the matching CNAMEs to the tunnel.
+
 Not offered: LAN-only hostnames, NodePorts, `hostNetwork` apps ([ADR-0011](decisions/0011-traffic-exposure.md)).
 
 ## 5. Control loops: how drift is prevented

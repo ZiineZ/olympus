@@ -32,7 +32,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 
 - **Root:** only `00-docs` through `05-apps`, plus `.claude/ .github/ .config/ .sops.yaml .gitignore`.
 - **Layers and groups:** a layer depends only on lower numbers. Groups are a closed set; a new group is appended with the next number and nothing is ever renumbered.
-- **Component shape:** `<component>/ks.yaml` plus `app/{kustomization, namespace, ocirepository, helmrelease, *.sops}.yaml`, with Helm values inline in `helmrelease.yaml` ([ADR-0029](decisions/0029-bootstrap-layer-corrections.md)). A second Flux Kustomization, needed for CRD ordering, points into a subfolder of `app/`. The only extra folder allowed beside `app/` is `image/`, and only for components that build their own image.
+- **Component shape:** `<component>/ks.yaml` plus `app/{kustomization, namespace, ocirepository, helmrelease, *.sops}.yaml` (`helmrepository.yaml` instead of `ocirepository.yaml` only when the publisher has no OCI registry), with Helm values inline in `helmrelease.yaml` ([ADR-0029](decisions/0029-bootstrap-layer-corrections.md)). A second Flux Kustomization, needed for CRD ordering, points into a subfolder of `app/`. The only extra folder allowed beside `app/` is `image/`, and only for components that build their own image.
 - **Namespace = folder name.** The exceptions are `cilium` and `metrics-server` (in `kube-system`) and `flux-operator` and `flux-instance` (in `flux-system`).
 - **Cohesion:** everything about X lives in X's folder.
 - Every manifest starts with a `# yaml-language-server: $schema=…` line.

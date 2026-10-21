@@ -32,4 +32,12 @@ spec:
         cpu: null
         memory: 256Mi
     web:
-      enabled: true # Flux Web UI, read-only for humans (ADR-0013); exposed on the tailnet in the core layer
+      enabled: true # Flux Web UI on the tailnet (./ingress.yaml)
+      config: # every visitor acts as olympus:viewers: read-only, so UI actions can't create drift (ADR-0013)
+        apiVersion: web.fluxcd.controlplane.io/v1
+        kind: Config
+        spec:
+          authentication:
+            type: Anonymous
+            anonymous:
+              groups: [olympus:viewers]

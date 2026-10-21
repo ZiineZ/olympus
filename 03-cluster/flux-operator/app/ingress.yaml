@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/ingress-networking-v1.json
+# Flux Web UI at https://flux<suffix>.<tailnet>.ts.net, tailnet-only (ADR-0011 tier 2).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: flux-web
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: flux-operator
+      port:
+        number: 9080
+  tls:
+    - hosts: ["flux${TS_HOST_SUFFIX}"]

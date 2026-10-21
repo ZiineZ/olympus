@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: external-dns
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: external-dns
+      version: 1.23.0
+      sourceRef:
+        kind: HelmRepository
+        name: external-dns
+  values:
+    provider:
+      name: cloudflare
+    env:
+      - name: CF_API_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: external-dns-cloudflare
+            key: api-token
+    sources: [gateway-httproute]
+    domainFilters: ["${PUBLIC_DOMAIN}"]
+    registry: txt
+    txtOwnerId: olympus # only records carrying this owner are ever changed or deleted
+    policy: sync
+    extraArgs:
+      - --cloudflare-proxied
+    priorityClassName: platform
+    resources: {requests: {cpu: 10m, memory: 128Mi}, limits: {memory: 128Mi}}

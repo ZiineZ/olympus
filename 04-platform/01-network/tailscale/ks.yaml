@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tailscale
+  namespace: flux-system
+  annotations:
+    olympus/description: Tailscale operator. Admin UIs on the tailnet, and kubectl through its read-only API server proxy.
+    olympus/docs: 00-docs/architecture.md
+    olympus/adr: "0011,0012"
+spec:
+  interval: 10m
+  path: ./04-platform/01-network/tailscale/app
+  targetNamespace: tailscale
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: cilium
+---
+# The default ProxyClass is a Tailscale CR: it can only apply once the operator has installed its CRDs.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tailscale-config
+  namespace: flux-system
+  annotations:
+    olympus/description: Default ProxyClass for every proxy the operator creates (priority, resources).
+    olympus/docs: 00-docs/architecture.md
+    olympus/adr: "0012,0022"
+spec:
+  interval: 10m
+  path: ./04-platform/01-network/tailscale/app/config
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: tailscale

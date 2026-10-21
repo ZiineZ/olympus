@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/gateway.networking.k8s.io/gateway_v1.json
+# TLS ends at Cloudflare; the hop from cloudflared to here is plain HTTP inside the cluster (ADR-0011).
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: public
+  annotations:
+    # external-dns points every hostname routed here at the tunnel (proxied CNAME)
+    external-dns.alpha.kubernetes.io/target: ${CLOUDFLARE_TUNNEL_ID}.cfargotunnel.com
+spec:
+  gatewayClassName: cilium
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              olympus/gateway-access: public # apps opt in explicitly
