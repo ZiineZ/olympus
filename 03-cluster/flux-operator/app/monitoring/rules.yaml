@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/operator.victoriametrics.com/vmrule_v1beta1.json
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: flux
+spec:
+  groups:
+    - name: flux
+      rules:
+        - alert: FluxResourceNotReady
+          expr: max by (kind, exported_namespace, name) (flux_resource_info{ready!="True", suspended="False"}) == 1
+          for: 15m
+          labels: {severity: warning}
+          annotations:
+            summary: Flux {{ $labels.kind }} {{ $labels.exported_namespace }}/{{ $labels.name }} has not been ready for 15 minutes
+            description: The cluster no longer matches git for this resource. `flux get all -A` shows the reason.
+        - alert: FluxResourceSuspended
+          expr: max by (kind, exported_namespace, name) (flux_resource_info{suspended="True"}) == 1
+          for: 24h
+          labels: {severity: warning}
+          annotations:
+            summary: Flux {{ $labels.kind }} {{ $labels.exported_namespace }}/{{ $labels.name }} has been suspended for a day
+            description: A suspended resource ignores git, so the cluster drifts. Resume it once the break-glass work is done.

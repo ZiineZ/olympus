@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/operator.victoriametrics.com/vmrule_v1beta1.json
+# Backup pods push restic's results to VMSingle after every run (BACKUP_PROMURL in ../helmrelease.yaml).
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: k8up
+spec:
+  groups:
+    - name: k8up
+      rules:
+        - alert: BackupStale
+          # ponytail: a namespace whose last push is older than the 30-day window drops out; the job alerts cover that
+          expr: lag(k8up_backup_restic_last_errors[30d]) > 26 * 3600
+          labels: {severity: warning}
+          annotations:
+            summary: The last backup of {{ $labels.instance }} finished {{ $value | humanizeDuration }} ago
+            description: Daily backups have stopped for this namespace. Check its Schedule and `kubectl -n k8up logs deploy/k8up`.
+        - alert: BackupErrors
+          expr: k8up_backup_restic_last_errors > 0
+          labels: {severity: warning}
+          annotations:
+            summary: The last backup of {{ $labels.instance }} had {{ $value }} error(s)
+            description: Some files were not backed up. The backup pod's log names them.
+        - alert: BackupJobFailed
+          expr: increase(k8up_jobs_failed_counter[1h]) > 0
+          labels: {severity: warning}
+          annotations:
+            summary: A k8up {{ $labels.jobType }} job failed in {{ $labels.namespace }}
+            description: Check the failed job's pod log in that namespace (label `k8up.io/type={{ $labels.jobType }}`).

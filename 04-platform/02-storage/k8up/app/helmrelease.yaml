@@ -22,6 +22,9 @@ spec:
         repository: ghcr.io/k8up-io/k8up
         tag: v2.16.0@sha256:29458113b8b676b5b48ebf25b21be5194ee9dccc887b92b8fa27f7d3dfca6f50
       timezone: Europe/Amsterdam
+      envVars: # backup pods push restic's results to VMSingle's Pushgateway-compatible endpoint (ADR-0034)
+        - name: BACKUP_PROMURL
+          value: http://vmsingle-vm.victoria-metrics.svc.cluster.local:8428/api/v1/import/prometheus
       globalResources: # every backup/check/prune job pod (ADR-0022); restic needs headroom when pruning
         requests: {cpu: 50m, memory: 512Mi}
         limits: {memory: 512Mi}

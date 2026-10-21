@@ -20,3 +20,26 @@ spec:
     substituteFrom:
       - kind: ConfigMap
         name: cluster-settings
+---
+# Scrapes and alert rules are VictoriaMetrics CRs: they wait for the observability layer (ADR-0034).
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: flux-operator-monitoring
+  namespace: flux-system
+  annotations:
+    olympus/description: Scrape and the Flux health alerts, from the Flux Operator's report of every Flux resource.
+    olympus/docs: 00-docs/runbooks/04-observability.md
+    olympus/adr: "0034"
+spec:
+  interval: 10m
+  path: ./03-cluster/flux-operator/app/monitoring
+  targetNamespace: flux-system
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: flux-operator
+    - name: victoria-metrics

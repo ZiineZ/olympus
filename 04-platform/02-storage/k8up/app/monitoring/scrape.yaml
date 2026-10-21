@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/operator.victoriametrics.com/vmpodscrape_v1beta1.json
+# The operator's job counters. honorLabels keeps their `namespace` label (the backed-up namespace, not k8up's).
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMPodScrape
+metadata:
+  name: k8up
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: k8up
+  podMetricsEndpoints:
+    - port: http
+      honorLabels: true

@@ -18,3 +18,25 @@ spec:
     name: flux-system
   dependsOn:
     - name: gateway
+---
+# Scrapes and alert rules are VictoriaMetrics CRs: they wait for the observability layer (ADR-0034).
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cloudflared-monitoring
+  namespace: flux-system
+  annotations:
+    olympus/description: Scrape and the tunnel-down alert for cloudflared.
+    olympus/docs: 00-docs/runbooks/04-observability.md
+    olympus/adr: "0034"
+spec:
+  interval: 10m
+  path: ./04-platform/01-network/cloudflared/app/monitoring
+  targetNamespace: cloudflared
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: cloudflared
+    - name: victoria-metrics

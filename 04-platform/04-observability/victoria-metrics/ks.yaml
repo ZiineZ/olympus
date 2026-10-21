@@ -19,3 +19,24 @@ spec:
     name: flux-system
   dependsOn:
     - name: local-path-provisioner
+---
+# Scrapes and alert rules are VictoriaMetrics CRs: they wait for the observability layer (ADR-0034).
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: victoria-metrics-monitoring
+  namespace: flux-system
+  annotations:
+    olympus/description: Olympus alert rules for the nodes, on top of the stack's upstream rule sets.
+    olympus/docs: 00-docs/runbooks/04-observability.md
+    olympus/adr: "0034"
+spec:
+  interval: 10m
+  path: ./04-platform/04-observability/victoria-metrics/app/monitoring
+  targetNamespace: victoria-metrics
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: victoria-metrics

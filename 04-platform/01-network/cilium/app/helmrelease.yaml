@@ -61,7 +61,9 @@ spec:
           resources: {requests: {cpu: 50m, memory: 64Mi}, limits: {memory: 64Mi}}
         frontend:
           resources: {requests: {cpu: 10m, memory: 64Mi}, limits: {memory: 64Mi}}
-      metrics: # scraped once the observability layer exists
+      metrics: # scraped by ./monitoring (ADR-0034)
+        dashboards:
+          enabled: true
         enabled:
           - dns
           - drop
@@ -70,8 +72,16 @@ spec:
           - port-distribution
           - icmp
           - httpV2:exemplars=true;labelsContext=source_namespace,destination_namespace
+    # Metrics for ./monitoring; dashboards are ConfigMaps that Grafana's sidecar loads. No ServiceMonitors:
+    # Cilium installs before the monitoring CRDs exist (ADR-0034)
+    prometheus:
+      enabled: true
+    dashboards:
+      enabled: true
     operator:
       replicas: 1 # one until there are 3+ nodes
+      dashboards:
+        enabled: true
       rollOutPods: true
       resources: {requests: {cpu: 50m, memory: 256Mi}, limits: {memory: 256Mi}}
     rollOutCiliumPods: true
