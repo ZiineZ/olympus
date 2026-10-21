@@ -111,7 +111,7 @@ talosctl cluster create docker \
   --name olympus-rehearsal --state "$PWD/.rehearsal/state" \
   --image "ghcr.io/siderolabs/talos:$(yq .talosVersion "$cfg")" \
   --kubernetes-version "$(yq .kubernetesVersion "$cfg" | sed 's/^v//')" \
-  --workers 0 --cpus-controlplanes 4 --memory-controlplanes 6GiB \
+  --workers 0 --cpus-controlplanes 6 --memory-controlplanes 10GiB \
   --host-ip 127.0.0.1 --talosconfig-destination "$TALOSCONFIG" \
   "${args[@]}"
 '''

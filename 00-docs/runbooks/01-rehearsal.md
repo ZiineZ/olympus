@@ -18,6 +18,10 @@ Each layer is a PR. The rehearsal proves it on the running cluster *before* Stan
 | Bootstrap | Cilium, then Flux taking over from helmfile | node Ready, Flux syncing |
 | Core, observability, agent | one PR each | each component Ready under the admission policies |
 
+## Mac resources
+
+The full stack requests about 6.6 GiB of memory. OrbStack needs **12 GB** (`orb config set memory_mib 12288`, then `orb stop && orb start`). The rehearsal node gets 10 GiB and 6 CPUs.
+
 ## Commands (run in `~/olympus-rehearsal`)
 
 ```bash
