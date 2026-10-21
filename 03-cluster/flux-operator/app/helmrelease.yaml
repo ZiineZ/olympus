@@ -38,4 +38,5 @@ spec:
         authentication:
           type: Anonymous
           anonymous:
+            username: flux-web-viewer # Kubernetes can't impersonate a group without a user; no RBAC binds this name
             groups: [olympus:viewers]
