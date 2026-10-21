@@ -39,7 +39,7 @@ spec:
       sync:
         kind: GitRepository
         url: https://github.com/ZiineZ/olympus.git # public repo: no credentials (ADR-0027)
-        ref: refs/heads/main
+        ref: refs/heads/rehearsal/2026-10-21 # REHEARSAL (ADR-0025)
         path: 03-cluster
         interval: 1m
       kustomize:

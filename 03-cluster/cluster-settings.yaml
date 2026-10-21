@@ -8,12 +8,12 @@ metadata:
   name: cluster-settings
   namespace: flux-system
 data:
-  LB_POOL_START: 192.168.50.200 # Cilium LoadBalancer pool (ADR-0009)
-  LB_POOL_END: 192.168.50.229
+  LB_POOL_START: 10.5.0.200 # REHEARSAL: OrbStack docker network (ADR-0025)
+  LB_POOL_END: 10.5.0.229
   PUBLIC_DOMAIN: stantheunissen.nl # public apex, served through Cloudflare (ADR-0011)
   CLOUDFLARE_TUNNEL_ID: b5aa802d-2992-47a0-9205-36dcc7694caf # tunnel "olympus"; not a secret
   BACKUP_S3_ENDPOINT: https://7a833371769d58fc71637488d915b837.r2.cloudflarestorage.com # Cloudflare R2 (ADR-0017)
-  BACKUP_BUCKET: olympus-backups # each namespace writes to <bucket>/<namespace>
-  CONTROL_PLANE_IP: 192.168.50.11 # zeus; etcd metrics are scraped here (ADR-0018)
-  STORAGE_NODE: zeus # the only node that provides local-path volumes (ADR-0016)
-  TS_HOST_SUFFIX: "" # tailnet hostnames; "-rehearsal" on the rehearsal cluster (ADR-0025)
+  BACKUP_BUCKET: olympus-backups/rehearsal # REHEARSAL: kept apart from real backups; each namespace writes to <bucket>/<namespace>
+  CONTROL_PLANE_IP: 10.5.0.2 # REHEARSAL # zeus; etcd metrics are scraped here (ADR-0018)
+  STORAGE_NODE: olympus-rehearsal-controlplane-1 # REHEARSAL # the only node that provides local-path volumes (ADR-0016)
+  TS_HOST_SUFFIX: "-rehearsal" # REHEARSAL # tailnet hostnames; "-rehearsal" on the rehearsal cluster (ADR-0025)
