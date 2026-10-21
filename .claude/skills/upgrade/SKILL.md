@@ -37,7 +37,7 @@ Policy sources: **ADR-0023** (Renovate and tuppr) and **ADR-0008** (the Kubernet
    - Cilium supports the Kubernetes version and the Gateway API CRD version.
    - The chart's `kubeVersion` constraint is satisfied.
 5. **Check grouping.** Related versions must be in the same PR:
-   - talconfig + the tuppr CR
+   - `01-talos/cluster.yaml` + the tuppr CR
    - Cilium + Gateway API CRDs
    - flux-operator + `FluxInstance.distribution.version`
 
@@ -59,7 +59,7 @@ Policy sources: **ADR-0023** (Renovate and tuppr) and **ADR-0008** (the Kubernet
 
 ## 4. Talos and Kubernetes upgrades (tuppr)
 
-- The PR changes **both** `01-talos/talconfig.yaml` (`talosVersion`/`kubernetesVersion`) and the tuppr CR in `04-platform/05-operations/tuppr/app/`. `versions-match` fails otherwise.
+- The PR changes **both** `01-talos/cluster.yaml` (`talosVersion`/`kubernetesVersion`) and the tuppr CR in `04-platform/05-operations/tuppr/app/`. `versions-match` fails otherwise.
 - **After merge:** tuppr upgrades one node at a time, gated on all nodes Ready + Flux Ready. Watch, read-only:
   ```bash
   kubectl get talosupgrade,kubernetesupgrade -A

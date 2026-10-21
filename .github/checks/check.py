@@ -13,6 +13,7 @@ import os
 import re
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 ROOT = Path(subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True).stdout.strip())
@@ -117,6 +118,32 @@ def check_no_versions_in_docs(files):
     return errs
 
 
+def check_talos(files):
+    """ADR-0028: cluster.yaml is consistent with the toolchain, its schematics and patch folders."""
+    if "01-talos/cluster.yaml" not in files:
+        return []
+    cluster = yaml_load(ROOT / "01-talos/cluster.yaml")
+    tools = tomllib.loads((ROOT / ".config/mise.toml").read_text())["tools"]
+    errs = []
+    if cluster["talosVersion"].lstrip("v") != tools["talosctl"]:
+        errs.append(f"talosVersion {cluster['talosVersion']} != talosctl pin {tools['talosctl']} in .config/mise.toml")
+    k8s_minor = int(cluster["kubernetesVersion"].lstrip("v").split(".")[1])
+    kubectl_minor = int(tools["kubectl"].split(".")[1])
+    if abs(k8s_minor - kubectl_minor) > 1:
+        errs.append(f"kubectl {tools['kubectl']} is more than one minor from kubernetesVersion {cluster['kubernetesVersion']}")
+    names = [n["name"] for n in cluster["nodes"]]
+    errs += [f"node name '{n}' is not unique" for n in sorted({n for n in names if names.count(n) > 1})]
+    for node in cluster["nodes"]:
+        if node["role"] not in ("controlplane", "worker"):
+            errs.append(f"node {node['name']}: role must be controlplane or worker")
+        if f"01-talos/schematics/{node['schematic']}.yaml" not in files:
+            errs.append(f"node {node['name']}: schematic file 01-talos/schematics/{node['schematic']}.yaml missing")
+    for f in matches("01-talos/patches/*/*.yaml", files) + matches("01-talos/schematics/*.yaml", files):
+        if subprocess.run(["yq", "-e", "true", str(ROOT / f)], capture_output=True).returncode != 0:
+            errs.append(f"{f}: not valid YAML")
+    return errs
+
+
 # --- PR checks ---------------------------------------------------------------------------
 
 def changed_files(base):
@@ -181,6 +208,7 @@ def main():
         "adr-format": check_adr_format(files),
         "doc-links": check_doc_links(files),
         "no-versions-in-docs": check_no_versions_in_docs(files),
+        "talos": check_talos(files),
     }
     if "--pr" in sys.argv:
         results["sync-rules"] = check_sync_rules(changed_files(os.environ["BASE_REF"]), os.environ.get("PR_BODY", ""))

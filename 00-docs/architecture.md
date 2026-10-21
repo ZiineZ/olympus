@@ -53,7 +53,7 @@ The repo's numbered folders are the build and dependency order ([ADR-0003](decis
 
 ## 3. Nodes
 
-The node inventory (names, IPs, disks, schematics) lives only in `01-talos/talconfig.yaml` (created in phase 2). The generated table is in `inventory.md`.
+The node inventory lives only in `01-talos/cluster.yaml`: names, IPs, roles, install disks, and which image schematic (`01-talos/schematics/`) each node boots. The generated table is in `inventory.md`.
 
 - **zeus** is the only control plane and the only `olympus/tier=heavy` node. It runs etcd and all stateful workloads, and it is the only node with node-level Tailscale access.
 - **Workers** (`olympus/tier=light`) run stateless workloads. Their names are taken in order from the pantheon list in [ADR-0002](decisions/0002-naming-greek-pantheon.md).

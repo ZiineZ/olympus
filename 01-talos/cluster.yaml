@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://json.schemastore.org/any.json
+# Single source of the Talos cluster: versions, endpoint and node inventory (ADR-0004, ADR-0028).
+# Read by the mise talos/rehearsal tasks with yq. Patches apply by folder: patches/global to every
+# node, patches/<role> to that role. Each node's schematic lives in schematics/<schematic>.yaml.
+talosVersion: v1.14.4 # must equal the talosctl pin in .config/mise.toml (check: talos)
+kubernetesVersion: v1.36.5 # ADR-0008 version policy; kubectl stays within one minor (check: talos)
+endpoint: https://192.168.50.10:6443 # the VIP, never a node IP (ADR-0008)
+
+nodes:
+  - name: zeus
+    ip: 192.168.50.11
+    role: controlplane
+    schematic: zeus
+    installDisk: nvme # Talos install disk selector (type)

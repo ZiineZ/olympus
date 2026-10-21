@@ -1,0 +1,6 @@
+# Light-node reservations (ADR-0007). Calibration knob.
+apiVersion: v1alpha1
+kind: KubeletConfig
+config:
+  systemReserved: {cpu: 250m, memory: 512Mi}
+  kubeReserved: {cpu: 250m, memory: 512Mi}

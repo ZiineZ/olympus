@@ -15,7 +15,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 
 ## Naming ([ADR-0002](decisions/0002-naming-greek-pantheon.md))
 
-- **Identities are Greek gods:** cluster `olympus`, nodes in `01-talos/talconfig.yaml`, agent `athena`. Never use `hermes` or `prometheus`.
+- **Identities are Greek gods:** cluster `olympus`, nodes in `01-talos/cluster.yaml`, agent `athena`. Never use `hermes` or `prometheus`.
 - **Everything else is functional:** namespace = folder = upstream name, written in lowercase kebab-case.
 - Secrets are named `<component>-<purpose>`, in files `<name>.sops.yaml`.
 - **Custom keys always use the `olympus/` prefix.** These are the only allowed ones:
@@ -44,9 +44,9 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
   | Fact | Lives in |
   |---|---|
   | Versions | manifests |
-  | Talos and Kubernetes versions | `talconfig.yaml` and the tuppr CRs (must match) |
+  | Talos and Kubernetes versions | `01-talos/cluster.yaml` and the tuppr CRs (must match) |
   | Shared values | `03-cluster/cluster-settings.yaml` |
-  | Nodes and IPs | `talconfig.yaml` |
+  | Nodes and IPs | `01-talos/cluster.yaml` |
   | Helm values | `app/values.yaml` |
   | Rules | this file |
   | CLI versions | `.config/mise.toml` |
@@ -79,11 +79,13 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 
 ## Nodes ([ADR-0007](decisions/0007-operating-system-talos-linux.md), [ADR-0008](decisions/0008-cluster-topology-and-versions.md), [ADR-0009](decisions/0009-network-addressing-and-hardware.md))
 
-- **Talos only.** Configuration is applied only through `mise run talos:apply`. There is no SSH and no hand-made patches.
+- **Talos only.** Configuration is applied only through mise tasks. There is no SSH and no hand-made patches.
+- **Talos config is rendered by `talosctl` alone** ([ADR-0028](decisions/0028-talos-config-with-talosctl.md)). `01-talos/cluster.yaml` holds versions and nodes. Patches apply by folder: `patches/global` to every node, `patches/<role>` to that role. Each image is defined in `schematics/<name>.yaml`.
+- **Patches use only Talos 1.14 config documents**, never the deprecated `v1alpha1` fields. Cluster-scoped documents belong in `patches/controlplane/`.
 - **Image schematics:** `zeus`, `amd`, `intel`. Every node has wired Ethernet.
 - **No swap.** Kubelet reservations and eviction thresholds are set in `patches/`.
 - **The API endpoint is always the VIP** (`${CLUSTER_API_VIP}`), never a node IP.
-- **LAN:** `192.168.50.0/24`. Node IPs are static and set in `talconfig.yaml`. Router DHCP serves `.100`–`.199`, and the LoadBalancer pool is `.200`–`.229`.
+- **LAN:** `192.168.50.0/24`. Node IPs are static and set in `01-talos/cluster.yaml`. Router DHCP serves `.100`–`.199`, and the LoadBalancer pool is `.200`–`.229`.
 - A new node must pass the live-boot hardware check (`runbooks/08-add-node.md`) before it joins.
 - **Kubernetes version:** the newest minor that Talos supports and that has reached `.2`. Never skip a minor.
 

@@ -37,7 +37,7 @@ You are the maintainer of Olympus. When you run in-cluster, you are **Athena**. 
 | What are the rules? | `00-docs/conventions.md` |
 | How does the system work end to end? | `00-docs/architecture.md` |
 | Which versions, components, namespaces and nodes exist now? | `00-docs/inventory.md` (generated), or the manifests themselves |
-| Nodes, IPs, disks, Talos/K8s versions, schematics | `01-talos/talconfig.yaml` + `01-talos/patches/` |
+| Nodes, IPs, disks, Talos/K8s versions | `01-talos/cluster.yaml`; patches by role in `01-talos/patches/`; images in `01-talos/schematics/` |
 | Shared values (`${VAR}`) | `03-cluster/cluster-settings.yaml` |
 | Flux defaults (intervals, prune, drift detection) | `03-cluster/flux-instance/app/values.yaml` (FluxInstance kustomize patches) |
 | Order things deploy in | `03-cluster/layers.yaml` + `dependsOn` in each `ks.yaml` |

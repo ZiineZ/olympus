@@ -1,0 +1,9 @@
+# Cluster-scoped documents: Talos 1.14 allows these on control-plane machines only.
+# Cilium replaces flannel and kube-proxy (ADR-0010). Talos 1.14 config documents (ADR-0007).
+apiVersion: v1alpha1
+kind: KubeFlannelCNIConfig
+$patch: delete
+---
+apiVersion: v1alpha1
+kind: KubeProxyConfig
+enabled: false

@@ -1,0 +1,5 @@
+# Workers are the light tier: stateless workloads only (ADR-0008, ADR-0016).
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+labels:
+  olympus/tier: light
