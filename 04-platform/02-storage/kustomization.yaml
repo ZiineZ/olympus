@@ -4,3 +4,5 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - local-path-provisioner/ks.yaml
+  - k8up/ks.yaml
+  - backup-canary/ks.yaml

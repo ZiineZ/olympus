@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+    name: k8up-repo
+    namespace: default
+stringData:
+    RESTIC_PASSWORD: ENC[AES256_GCM,data:zTm8jvzW8QBOUWl/df+f9HRRGFDaoFJhWt19eMHwa0oTp9BB/xsLHt9vRmwcSfOeleLvvoyPih0mP2p4D5x+qg==,iv:+L0ARfEy7djIRaamMshBVSWCsGBMvrKgMAoWCNVLwSw=,tag:dGHWC0miyPUTFIflZ6zY/A==,type:str]
+    AWS_ACCESS_KEY_ID: ENC[AES256_GCM,data:t9iqys8JHtlxnYlLK8swUbfYaXjMcq5AWr8vDIO+tWw=,iv:lxqLqvtMEHaILvXKA6aEOqXZc9LCgoldeSF4Dkg3yWs=,tag:RTeWx6PO/2OmZJ1RkOdPkw==,type:str]
+    AWS_SECRET_ACCESS_KEY: ENC[AES256_GCM,data:zl4LHbnpcXUktgpSCAW+ndEJwweq04DT62tJM3SeTXhXoWG5gVWwOQhu31vUvU1HmKXVi542qdo/SdcDBr4XGA==,iv:/BCedzMWllV62wKPtcDMmpuytHCy4XWAvbToqqrsvBo=,tag:B2khnpjq/JkABFUJEB5/Nw==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBmdCs1MTNZQWNSMEhHWG1S
+            cmx6dXJqQllaaWtUZG54WjdSbVVSLytSUkFZCjBmRVNnM0RvQVM3cWVoSkJuQTE1
+            VitTck5DQytmZXZEaXFYblYweGhDLzgKLS0tIHFqalNxK1VYR0d2RTJoeHcrL3lM
+            ZlJlQW1jRmZhOGdmNS9nY2plN3grblEKNL0WrZT4MoAr3kY2d8S6M8lETg0mnne0
+            HQ77v7albroNsNkS+rcXnzAIWrqvsM7ldlyVCNA/QZO+nTns9bSgyw==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1axnvv6sge9dx97peq2ks39a3smdtggas8cdasaaxtl0un3ck4pzsndgmku
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-21T12:20:15Z"
+    mac: ENC[AES256_GCM,data:AqLG1W5fLYQnibvaQQqrEudBXhZ3o35w2b1aq9epKMeaRFJbQLoJ56URbJT33e2YGPpS1ngzHpXdmLYXWF5MCF5XilTZHgT6jud9YzldACbq5yfpVq+1f+VdwQeIOZOzT9OJO3bV4Z5575w/4VdmKWK5Rmp5zAttG6efhKg4uVg=,iv:omGUaQ/iNReY7krcdKorqpLsjL5EaAPcJMYPcZdHu7I=,tag:Z18gZosJ/ITSRV8ieAoetw==,type:str]
+    version: 3.13.3

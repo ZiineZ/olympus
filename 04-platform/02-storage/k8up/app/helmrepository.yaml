@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrepository-source-v1.json
+# k8up publishes its chart (with CRDs) only in a classic Helm repository, not OCI (ADR-0013 rule 5).
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: k8up
+spec:
+  interval: 1h
+  url: https://k8up-io.github.io/k8up

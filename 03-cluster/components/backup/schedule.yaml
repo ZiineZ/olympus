@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/k8up.io/schedule_v1.json
+apiVersion: k8up.io/v1
+kind: Schedule
+metadata:
+  name: backup
+spec:
+  podConfigRef:
+    name: backup
+  backend:
+    repoPasswordSecretRef: {name: k8up-repo, key: RESTIC_PASSWORD}
+    s3:
+      endpoint: ${BACKUP_S3_ENDPOINT}
+      bucket: ${BACKUP_BUCKET}/NAMESPACE # "NAMESPACE" is replaced with the namespace's name (kustomization.yaml)
+      accessKeyIDSecretRef: {name: k8up-repo, key: AWS_ACCESS_KEY_ID}
+      secretAccessKeySecretRef: {name: k8up-repo, key: AWS_SECRET_ACCESS_KEY}
+  backup:
+    schedule: "@daily-random"
+    failedJobsHistoryLimit: 2
+    successfulJobsHistoryLimit: 1
+  check:
+    schedule: "@weekly-random"
+  prune:
+    schedule: "@weekly-random"
+    retention: {keepDaily: 7, keepWeekly: 4, keepMonthly: 6}

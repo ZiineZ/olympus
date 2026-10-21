@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/namespace-v1.json
+# Only the operator runs here; backup jobs run inside each opted-in namespace (03-cluster/components/backup).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: k8up
