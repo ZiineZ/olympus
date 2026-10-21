@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: local-path-provisioner
+  namespace: flux-system
+  annotations:
+    olympus/description: The default StorageClass local-path. NVMe-backed volumes on zeus only, reclaim policy Retain.
+    olympus/docs: 00-docs/architecture.md
+    olympus/adr: "0016"
+spec:
+  interval: 10m
+  path: ./04-platform/02-storage/local-path-provisioner/app
+  targetNamespace: local-path-provisioner
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system

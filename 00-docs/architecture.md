@@ -94,7 +94,7 @@ Not offered: LAN-only hostnames, NodePorts, `hostNetwork` apps ([ADR-0011](decis
 | Flux GitRepository | the cluster's view of `main` | 1m, plus a GitHub webhook |
 | Flux Kustomizations | every object in git exists, and objects removed from git are pruned | 10m |
 | Flux HelmRelease drift detection | live Helm-managed objects match their release | 30m |
-| Admission policies (Pod Security + VAP) | nothing non-compliant enters the API | every request |
+| Admission policies (Pod Security + VAP) | nothing non-compliant enters the API. VAPs are Warn + Audit until the follow-up PR switches the strict ones to Deny (ADR-0021 rule 4) | every request |
 | tuppr | nodes run the Talos and Kubernetes versions in git | on change |
 | Renovate | pinned versions don't go stale | weekly |
 | CI `validate` | git itself is consistent: render, schema, policies, docs, co-changes | every PR |
@@ -103,6 +103,8 @@ Not offered: LAN-only hostnames, NodePorts, `hostNetwork` apps ([ADR-0011](decis
 ## 6. Data
 
 - **Storage:** the only StorageClass is `local-path`, on zeus's NVMe. Reclaim policy is `Retain` and there is no replication ([ADR-0016](decisions/0016-storage-local-path.md)).
+  - **How a volume comes to exist:** a PVC asks for `local-path`. The provisioner's helper pod creates a directory under `/var/mnt/local-path` (the Talos user volume) on `${STORAGE_NODE}`, the only node listed, and the pod is scheduled there.
+  - **Data outlives its claim:** deleting a PVC leaves the PV `Released`, with its data, until someone deletes it on purpose.
 - **Backups:** k8up, using restic, backs up every opted-in namespace daily to Cloudflare R2. Retention is 7 daily, 4 weekly, 6 monthly ([ADR-0017](decisions/0017-backups-k8up.md)).
 - **Disaster recovery:** reinstall Talos, run the bootstrap, Flux rebuilds everything, then a PR adds the Restore CRs. The targets are an RPO of 24h and an RTO of about 1h ([ADR-0025](decisions/0025-disaster-recovery-and-rehearsal.md)).
 

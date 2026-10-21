@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/validatingadmissionpolicy-admissionregistration-v1.json
+# Pod templates carry app.kubernetes.io/name (ADR-0022).
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: require-app-name-label
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [apps]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [deployments, statefulsets, daemonsets]
+      - apiGroups: [batch]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [jobs, cronjobs]
+  variables:
+    - name: template
+      expression: "object.kind == 'CronJob' ? object.spec.jobTemplate.spec.template : object.spec.template"
+    - name: containers
+      expression: "variables.template.spec.containers + (has(variables.template.spec.initContainers) ? variables.template.spec.initContainers : [])"
+  validations:
+    - expression: "has(variables.template.metadata) && has(variables.template.metadata.labels) && 'app.kubernetes.io/name' in variables.template.metadata.labels"
+      messageExpression: "'the pod template has no app.kubernetes.io/name label (ADR-0022)'"
+---
+# Warn + Audit first; strict policies switch to [Deny] in a follow-up PR after a week (ADR-0021 rule 4).
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: require-app-name-label
+spec:
+  policyName: require-app-name-label
+  validationActions: [Warn, Audit]
+  matchResources:
+    namespaceSelector: # exemptions: only namespaces whose objects upstream operators create (ADR-0031)
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: [kube-system, flux-system]

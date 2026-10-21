@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - require-requests-and-memory-limit.yaml
+  - memory-limit-equals-request.yaml
+  - no-cpu-limits.yaml
+  - pinned-images.yaml
+  - images-have-digest.yaml
+  - require-app-name-label.yaml
+  - no-nodeport.yaml
+  - ingress-tailscale-only.yaml

@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/namespace-v1.json
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-path-provisioner
+  labels:
+    pod-security.kubernetes.io/enforce: privileged # why: helper pods create volume directories through hostPath (ADR-0021)

@@ -13,6 +13,8 @@ spec:
         kind: HelmRepository
         name: external-dns
   values:
+    image:
+      tag: v0.23.0@sha256:1854499e2b08cee47c40a08e356bff20dcb192dbcfde8378fc3f900f12cad5a3
     provider:
       name: cloudflare
     env:

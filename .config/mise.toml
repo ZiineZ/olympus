@@ -106,6 +106,7 @@ args=()
 for f in 01-talos/patches/global/*.yaml; do args+=(--config-patch "@$f"); done
 for f in 01-talos/patches/controlplane/*.yaml; do args+=(--config-patch-controlplanes "@$f"); done
 for f in 01-talos/patches/worker/*.yaml; do args+=(--config-patch-workers "@$f"); done
+for f in 01-talos/patches/rehearsal/*.yaml; do args+=(--config-patch-controlplanes "@$f"); done # Docker-only stand-ins
 talosctl cluster create docker \
   --name olympus-rehearsal --state "$PWD/.rehearsal/state" \
   --image "ghcr.io/siderolabs/talos:$(yq .talosVersion "$cfg")" \
