@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: k8up
+  namespace: flux-system
+  annotations:
+    olympus/description: k8up, the backup operator. Daily restic backups of every PVC in opted-in namespaces to Cloudflare R2.
+    olympus/docs: 00-docs/architecture.md,00-docs/runbooks/restore.md
+    olympus/adr: "0017"
+spec:
+  interval: 10m
+  path: ./04-platform/02-storage/k8up/app
+  targetNamespace: k8up
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system

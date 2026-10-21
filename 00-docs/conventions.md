@@ -116,7 +116,8 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 - **Storage:** StorageClass `local-path` only, set explicitly on every PVC. The CI `render` check enforces this, because the cluster fills in its default before admission policies can see it. It is backed by zeus only, with `Retain`.
 - **Placement:** stateful workloads use `nodeSelector: {olympus/tier: heavy}`.
 - **Backups:** every namespace with PVCs includes `03-cluster/components/backup` (k8up, daily), or is annotated `olympus/backup: none` with a reason.
-- **Restores** are a PR that adds a `Restore` CR. A follow-up PR removes it.
+- **Restores** are a PR that adds a `Restore` CR. A follow-up PR removes it ([runbooks/restore.md](runbooks/restore.md)).
+- **Backup pods run as UID 1000** with the restricted profile (`components/backup/podconfig.yaml`). An app that writes as another UID patches the PodConfig in its own folder.
 
 ## Observability ([ADR-0018](decisions/0018-observability-victoriametrics.md), [ADR-0019](decisions/0019-alerting-ntfy.md), [ADR-0020](decisions/0020-dashboard-kite.md))
 
@@ -143,7 +144,6 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
   | `victoria-metrics` | privileged | node-exporter |
   | `tailscale` | privileged | proxies need NET_ADMIN |
   | `local-path-provisioner` | privileged | hostPath helpers |
-  | `k8up` | baseline | backup pods read files as root |
 
 - **Images** are written `repo:tag@sha256:…`. Never `latest`.
 - **Labels:** `app.kubernetes.io/name` is required on every pod.

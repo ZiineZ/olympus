@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/k8up.io/podconfig_v1.json
+# Backup pods run inside the app's namespace, so they must pass Pod Security `restricted` (ADR-0021).
+# k8up merges the first container below into its job container (its name/command are ignored).
+# UID 1000 reads files written by our apps' standard user; an app with another UID patches this in its folder.
+apiVersion: k8up.io/v1
+kind: PodConfig
+metadata:
+  name: backup
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: backup
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: cache, mountPath: /.cache} # restic's cache
+      volumes:
+        - name: cache
+          emptyDir: {sizeLimit: 1Gi}

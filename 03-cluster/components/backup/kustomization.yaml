@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+# Opt a namespace into backups (ADR-0017): add `../../../03-cluster/components/backup` (relative path)
+# under `components:` in its app/kustomization.yaml. Every PVC in the namespace is then backed up daily
+# to <BACKUP_BUCKET>/<namespace> on R2, checked and pruned weekly.
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+resources:
+  - k8up-repo.sops.yaml
+  - podconfig.yaml
+  - schedule.yaml
+replacements: # each namespace gets its own restic repository: <bucket>/<namespace>
+  - source:
+      kind: Namespace
+      fieldPath: metadata.name
+    targets:
+      - select:
+          kind: Schedule
+          name: backup
+        fieldPaths: [spec.backend.s3.bucket]
+        options:
+          delimiter: /
+          index: 1

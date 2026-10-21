@@ -1,6 +1,6 @@
 # ADR-0017: Backups: k8up (restic) to off-site object storage
 
-- **Status:** Accepted
+- **Status:** Accepted (rule 7's first consumers amended by ADR-0032)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0001, ADR-0016, ADR-0019, ADR-0025

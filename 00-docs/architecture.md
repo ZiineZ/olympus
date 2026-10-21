@@ -105,7 +105,7 @@ Not offered: LAN-only hostnames, NodePorts, `hostNetwork` apps ([ADR-0011](decis
 - **Storage:** the only StorageClass is `local-path`, on zeus's NVMe. Reclaim policy is `Retain` and there is no replication ([ADR-0016](decisions/0016-storage-local-path.md)).
   - **How a volume comes to exist:** a PVC asks for `local-path`. The provisioner's helper pod creates a directory under `/var/mnt/local-path` (the Talos user volume) on `${STORAGE_NODE}`, the only node listed, and the pod is scheduled there.
   - **Data outlives its claim:** deleting a PVC leaves the PV `Released`, with its data, until someone deletes it on purpose.
-- **Backups:** k8up, using restic, backs up every opted-in namespace daily to Cloudflare R2. Retention is 7 daily, 4 weekly, 6 monthly ([ADR-0017](decisions/0017-backups-k8up.md)).
+- **Backups:** k8up, using restic, backs up every opted-in namespace daily to Cloudflare R2, each into its own repository `<BACKUP_BUCKET>/<namespace>`. A namespace opts in with the `03-cluster/components/backup` component. The `backup-canary` proves it continuously and is the restore-drill target ([ADR-0032](decisions/0032-backup-canary.md)). Restores are PRs ([runbooks/restore.md](runbooks/restore.md)). Retention is 7 daily, 4 weekly, 6 monthly ([ADR-0017](decisions/0017-backups-k8up.md)).
 - **Disaster recovery:** reinstall Talos, run the bootstrap, Flux rebuilds everything, then a PR adds the Restore CRs. The targets are an RPO of 24h and an RTO of about 1h ([ADR-0025](decisions/0025-disaster-recovery-and-rehearsal.md)).
 
 ## 7. Observability
