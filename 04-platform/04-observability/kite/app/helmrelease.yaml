@@ -38,6 +38,8 @@ spec:
             size: 1Gi
     nodeSelector:
       olympus/tier: heavy
+    podAnnotations: # Kite reads kite-secrets only at start: bump this in the PR that rotates them
+      kubectl.kubernetes.io/restartedAt: "2026-10-21T15:03:00Z"
     podSecurityContext:
       runAsNonRoot: true
       runAsUser: 1000 # the backup pods' UID (03-cluster/components/backup)
