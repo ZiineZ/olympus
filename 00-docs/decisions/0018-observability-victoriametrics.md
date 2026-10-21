@@ -1,6 +1,6 @@
 # ADR-0018: Observability: VictoriaMetrics k8s stack, read-only Grafana, metrics-server
 
-- **Status:** Accepted
+- **Status:** Accepted (rule 5 resolved and the Grafana admin-password detail of rule 3 superseded by ADR-0033)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0010, ADR-0019, ADR-0020, ADR-0022

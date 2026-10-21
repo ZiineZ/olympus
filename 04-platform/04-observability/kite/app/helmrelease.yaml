@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kite
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: kite
+  valuesFrom: # secret values stay out of git in plaintext (ADR-0014)
+    - {kind: Secret, name: kite-secrets, valuesKey: admin-password, targetPath: config.superUser.password}
+    - {kind: Secret, name: kite-secrets, valuesKey: encrypt-key, targetPath: encryptKey}
+    - {kind: Secret, name: kite-secrets, valuesKey: jwt-secret, targetPath: jwtSecret}
+  values:
+    image:
+      tag: v0.16.0@sha256:951616cbaf9ce7e1183450bb225114568a9fe5cb486b085e7399a4d453d1a19e
+    deploymentStrategy:
+      type: Recreate # RWO volume
+    config: # config-file mode: these sections are read-only in the UI (ADR-0020)
+      enabled: true
+      superUser:
+        username: stan
+      clusters:
+        - name: olympus
+          inCluster: true
+          default: true
+          prometheusURL: http://vmsingle-vm.victoria-metrics.svc.cluster.local:8428
+      # no "ai" section: Kite's assistant stays off; Athena is the cluster AI (ADR-0033)
+    rbac:
+      create: false # the chart's default is cluster-admin; ./rbac.yaml binds read-only roles instead
+    db:
+      sqlite:
+        persistence:
+          pvc:
+            enabled: true
+            storageClass: local-path
+            size: 1Gi
+    nodeSelector:
+      olympus/tier: heavy
+    podLabels:
+      app.kubernetes.io/name: kite
+    podSecurityContext:
+      runAsNonRoot: true
+      runAsUser: 1000 # the backup pods' UID (03-cluster/components/backup)
+      runAsGroup: 1000
+      fsGroup: 1000
+      seccompProfile: {type: RuntimeDefault}
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities: {drop: [ALL]}
+    resources: {requests: {cpu: 50m, memory: 256Mi}, limits: {memory: 256Mi}}

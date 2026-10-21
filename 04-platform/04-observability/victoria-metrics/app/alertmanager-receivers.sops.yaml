@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+    name: alertmanager-receivers
+    namespace: victoria-metrics
+stringData:
+    ntfy-critical: ENC[AES256_GCM,data:YduaMe6mCeitlAinc+vdzSXYZ4zMSik29wJoWhZZGBEjhbpE7zF285dyQwMPjdvxTIPpFxm7FMJrGVF8xf0ubhOXRQDsJ1UgvdFq4Lz8,iv:c02iVwnAMK2OZ03Kptd2fY6DvrRO14uLhH964q6N0Os=,tag:U6nXINhpornhhuRvzc2XZw==,type:str]
+    ntfy-warning: ENC[AES256_GCM,data:KoTQG52YVwYJ4mOuQMlxDXXS82NZCuOFDdDXW0y0HpU6resGugFIzrLFK5nNCLexkNvgh2ZlSr5v/H+zivk8sGNtXkJwJ9eP4ZNX1LBoeA==,iv:KGFxbSbRrBCvhI4azkj7Kuw35sTSFMDUgUEuo+KTWMc=,tag:NadEWHJMHxOXo13KpSxu4w==,type:str]
+    healthchecks: ENC[AES256_GCM,data:X630ZzxMiXgs2jnXBQSP2bOCEayd8nvk1LbDZ4hPaIG67eOZxATs4DI+bbbT70cIBjWinK0VQhk=,iv:bHpVLbzlJaoooE3W/EX4N4ihPKkFgJPRxDargS0Ify8=,tag:aZ0ke7U7yTjaRkNYL1O8Mw==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBNdEg5RW9yM2FGdDdoblZr
+            L091SE4wV0NBbmdrN3pVTWZOUDExY2V2amtNClJXRm1vaU42VnJrNDZ4ZXVPVEtI
+            YWE2WG1vNWJqWTFCeitHaFhlUDRPUTgKLS0tIGtqZm40amtSS3hjd1l0ZGM3bE5U
+            QXM1THhicUlDVUtWZjlRL2FLQ2hwdjgK1LOtuWa440MrC8GMXaIwOt1+LnMUdX9Y
+            qnUi5lcVbYtw+gMiTpsQ+bAKNTT3U2tHsxNqfCWqicfNI1U5NQKWuA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1axnvv6sge9dx97peq2ks39a3smdtggas8cdasaaxtl0un3ck4pzsndgmku
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-21T13:12:01Z"
+    mac: ENC[AES256_GCM,data:PjjIR1GRfrBIH/G5Uq7R18tARbDmValMG3EZYQS+fey6Kwyv5kAjlmWyxgdmdEdjney26dvCL5/yUCpIILXN5qNPPLt2Qloc1DG8sfI68pER2NSOn0YJJ20ciJZfQD+OmOkMkS2a+DDjORltevE/Cd8EICrwFI8+j1SEjGEztfY=,iv:Ko+6ATSZLfR+Vdw97TNvCCsE9tx9mC0Iehx7/1mVYSM=,tag:1x/xKLCyAGkF/eLVCwSGeA==,type:str]
+    version: 3.13.3

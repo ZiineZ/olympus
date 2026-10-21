@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/ingress-networking-v1.json
+# Kite at https://kite<suffix>.<tailnet>.ts.net, tailnet-only (ADR-0011 tier 2).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kite
+spec:
+  ingressClassName: tailscale
+  defaultBackend: {service: {name: kite, port: {number: 8080}}}
+  tls:
+    - hosts: ["kite${TS_HOST_SUFFIX}"]

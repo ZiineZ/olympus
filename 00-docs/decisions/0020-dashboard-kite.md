@@ -1,6 +1,6 @@
 # ADR-0020: Dashboard: Kite, declarative and read-only
 
-- **Status:** Accepted
+- **Status:** Accepted (the `ai` part of rule 2 and rule 8 superseded by ADR-0033: Kite's AI is off)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0011, ADR-0012, ADR-0018, ADR-0024

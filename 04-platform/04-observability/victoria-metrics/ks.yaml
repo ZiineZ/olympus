@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: victoria-metrics
+  namespace: flux-system
+  annotations:
+    olympus/description: VictoriaMetrics k8s stack. Metrics (30 days), alert rules, Alertmanager to ntfy plus the healthchecks.io dead man's switch, and read-only Grafana.
+    olympus/docs: 00-docs/architecture.md,00-docs/runbooks/04-observability.md
+    olympus/adr: "0018,0019,0033"
+spec:
+  interval: 10m
+  path: ./04-platform/04-observability/victoria-metrics/app
+  targetNamespace: victoria-metrics
+  prune: true
+  timeout: 10m # first install pulls many images and installs CRDs
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: local-path-provisioner

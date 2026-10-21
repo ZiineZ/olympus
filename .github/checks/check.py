@@ -26,6 +26,8 @@ ADR_SECTIONS = ("Context", "Decision", "Consequences", "Alternatives considered"
 PR_TITLE_RE = re.compile(r"^(feat|fix|chore|docs|refactor|ci|revert)(\([a-z0-9./-]+\))?!?: \S.*$")
 # A version string, but not part of a dotted quad (IPs, CIDRs).
 VERSION_RE = re.compile(r"(?<![\d.])v?\d+\.\d+\.\d+(?![\d.])")
+# Content fetched from a moving branch can change without any change in git (ADR-0033).
+FLOATING_REF_RE = re.compile(r"(?:raw\.githubusercontent\.com/[^/\s]+/[^/\s]+|github\.com/[^/\s]+/[^/\s]+/(?:raw|blob))/(?:main|master|HEAD)/")
 ESCAPE_RE = re.compile(r"^No doc change:\s*`?([^`\s]+)`?\s+(?:—|--|-)\s+\S", re.M)
 
 
@@ -248,6 +250,7 @@ def check_render(files):
                 errs.append(f"{path}: ${{{m.group(1)}}} is not defined in 03-cluster/cluster-settings.yaml")
             return settings.get(m.group(1), "")
         text = re.sub(r"\$\{([A-Z0-9_]+)\}", substitute, build.stdout)
+        errs += [f"{path}: floating ref {m.group(0)} (pin a tag or commit, ADR-0033)" for m in FLOATING_REF_RE.finditer(text)]
         rendered.append((path, k.get("spec", {}).get("targetNamespace"), text))
     errs += [f"cluster-settings: {v} is defined but never used" for v in sorted(set(settings) - used)]
     for path, target_ns, text in rendered:
@@ -290,6 +293,7 @@ def check_render(files):
             if tpl.returncode:
                 errs.append(f"{path}: helm template {name}: {tpl.stderr.strip().splitlines()[-1]}")
                 continue
+            errs += [f"{path} (helm {name}): floating ref {m.group(0)} (pin a tag or commit, ADR-0033)" for m in FLOATING_REF_RE.finditer(tpl.stdout)]
             check = subprocess.run(KUBECONFORM, input=tpl.stdout, capture_output=True, text=True)
             if check.returncode:
                 errs += [f"{path} (helm {name}): {l}" for l in check.stdout.splitlines() if "is invalid" in l][:10]
@@ -366,6 +370,10 @@ def selftest():
     assert VERSION_RE.findall("LAN 192.168.50.0/24, pods 10.244.0.0/16, date 2026-10-20") == []
     assert ESCAPE_RE.findall("x\nNo doc change: `00-docs/architecture.md` — only a typo\n") == ["00-docs/architecture.md"]
     assert ESCAPE_RE.findall("No doc change: 00-docs/architecture.md\n") == []  # a reason is mandatory
+    assert FLOATING_REF_RE.search("https://raw.githubusercontent.com/a/b/main/x.yaml")
+    assert FLOATING_REF_RE.search("https://raw.githubusercontent.com/a/b/master/x.json")
+    assert not FLOATING_REF_RE.search("https://raw.githubusercontent.com/a/b/v1.2.3/x.yaml")
+    assert not FLOATING_REF_RE.search("https://raw.githubusercontent.com/a/b/6599fbd7ce10924377a7b1d113281c7ae7c03043/x.json")
     assert PR_TITLE_RE.match("feat(kite)!: add tailnet ingress") and PR_TITLE_RE.match("chore(deps): update x")
     assert not PR_TITLE_RE.match("Add stuff")
     print("selftest ok")

@@ -123,8 +123,9 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 
 - **Metrics:** the VictoriaMetrics stack. Alert rules and dashboards live in the folder of the component they watch.
 - **Grafana dashboards** come from git only, with `editable: false`.
-- **Alerts** go to ntfy and are outbound only. `Watchdog` pings healthchecks.io, which acts as the dead man's switch.
-- **Kite** runs in config-file mode with a read-only ServiceAccount.
+- **Alerts** go to ntfy via its built-in Alertmanager template, and are outbound only. `Watchdog` pings healthchecks.io, the dead man's switch. All three URLs live in the `alertmanager-receivers` Secret ([ADR-0033](decisions/0033-observability-layer-corrections.md)).
+- **Every remotely fetched rule and dashboard is pinned** to a tag or commit. The `render` check rejects floating `main`/`master` refs.
+- **Kite** runs in config-file mode with a read-only ServiceAccount (`view` + `olympus-cluster-read`). Its AI is off: Claude subscription credentials are allowed only in Claude Code, which is Athena.
 
 ## Admission and workloads ([ADR-0021](decisions/0021-admission-policy.md), [ADR-0022](decisions/0022-workload-standards.md))
 

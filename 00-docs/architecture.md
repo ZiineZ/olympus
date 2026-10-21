@@ -112,7 +112,8 @@ Not offered: LAN-only hostnames, NodePorts, `hostNetwork` apps ([ADR-0011](decis
 
 - **Metrics:** VictoriaMetrics k8s stack (VMSingle, VMAgent, VMAlert, Alertmanager) plus node-exporter, kube-state-metrics, and metrics-server.
 - **Dashboards:** Grafana, read-only, provisioned from git. Hubble UI shows live flows. The Flux Web UI shows reconcile state. Kite gives the all-in-one view: resources, logs, metrics, and AI Q&A.
-- **Alerts:** VMAlert → Alertmanager → ntfy. A `Watchdog` heartbeat pings healthchecks.io, which raises its own alert if the cluster goes silent.
+- **Alerts:** VMAlert → Alertmanager → ntfy (critical is urgent and repeats hourly; warning is default). A `Watchdog` heartbeat pings healthchecks.io, which raises its own alert if the cluster goes silent.
+- **On the tailnet:** `grafana`, `kite`, `alertmanager` and `vmui` join `hubble` and `flux` (`runbooks/04-observability.md`).
 - **Logs:** streamed live through Kite and kubectl. No log store yet ([ADR-0026](decisions/0026-deferred-decisions-register.md)).
 
 ## 8. Agent

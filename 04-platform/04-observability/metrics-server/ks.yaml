@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: metrics-server
+  namespace: flux-system
+  annotations:
+    olympus/description: metrics-server. Live CPU/memory per pod and node for kubectl top, Kite and autoscaling.
+    olympus/docs: 00-docs/architecture.md
+    olympus/adr: "0018,0033"
+spec:
+  interval: 10m
+  path: ./04-platform/04-observability/metrics-server/app
+  targetNamespace: kube-system
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system

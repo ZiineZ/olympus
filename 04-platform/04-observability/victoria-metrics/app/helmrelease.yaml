@@ -1,0 +1,175 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: victoria-metrics
+spec:
+  interval: 30m
+  timeout: 10m
+  chartRef:
+    kind: OCIRepository
+    name: victoria-metrics-k8s-stack
+  values:
+    fullnameOverride: vm # short names: vmsingle-vm, vmalertmanager-vm, ... (Kite and the Ingresses refer to them)
+    victoria-metrics-operator:
+      crds:
+        cleanup:
+          enabled: false # its cleanup hook uses an unpinned kubectl image; CRDs are removed by hand if ever needed
+      operator:
+        disable_prometheus_converter: false # ServiceMonitors/PodMonitors from other charts work unchanged
+      priorityClassName: platform
+      resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {memory: 128Mi}}
+    vmsingle:
+      spec:
+        retentionPeriod: 30d
+        priorityClassName: platform
+        nodeSelector:
+          olympus/tier: heavy
+        storage:
+          storageClassName: local-path
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 30Gi
+        resources: {requests: {cpu: 100m, memory: 768Mi}, limits: {memory: 768Mi}} # calibration knob
+    vmagent:
+      spec:
+        scrapeInterval: 30s
+        priorityClassName: platform
+        resources: {requests: {cpu: 50m, memory: 256Mi}, limits: {memory: 256Mi}}
+    vmalert:
+      spec:
+        priorityClassName: platform
+        resources: {requests: {cpu: 20m, memory: 128Mi}, limits: {memory: 128Mi}}
+    alertmanager:
+      spec:
+        priorityClassName: platform
+        secrets: [alertmanager-receivers] # mounted at /etc/vm/secrets/alertmanager-receivers/<key>
+        resources: {requests: {cpu: 10m, memory: 64Mi}, limits: {memory: 64Mi}}
+      config: # ADR-0019. URLs come from files, so the topic and ping URL never appear in config.
+        route:
+          receiver: blackhole
+          group_by: [alertname, namespace]
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 12h
+          routes:
+            - matchers: ['alertname="Watchdog"'] # always firing: its absence is the alarm (healthchecks.io)
+              receiver: healthchecks
+              group_wait: 0s
+              group_interval: 1m
+              repeat_interval: 1m
+            - matchers: ['alertname="InfoInhibitor"']
+              receiver: blackhole
+            - matchers: ['severity="critical"']
+              receiver: ntfy-critical
+              repeat_interval: 1h # ntfy has no ack, so criticals repeat until resolved
+            - matchers: ['severity="warning"']
+              receiver: ntfy-warning
+        inhibit_rules:
+          - source_matchers: ['severity="critical"']
+            target_matchers: ['severity="warning"']
+            equal: [alertname, namespace]
+        receivers:
+          - name: blackhole
+          - name: healthchecks
+            webhook_configs:
+              - url_file: /etc/vm/secrets/alertmanager-receivers/healthchecks
+                send_resolved: false
+          - name: ntfy-critical
+            webhook_configs:
+              - url_file: /etc/vm/secrets/alertmanager-receivers/ntfy-critical
+                send_resolved: true
+          - name: ntfy-warning
+            webhook_configs:
+              - url_file: /etc/vm/secrets/alertmanager-receivers/ntfy-warning
+                send_resolved: true
+    grafana:
+      fullnameOverride: grafana
+      priorityClassName: platform
+      resources: {requests: {cpu: 50m, memory: 256Mi}, limits: {memory: 256Mi}}
+      persistence:
+        enabled: false # dashboards come only from git (ADR-0018): nothing to keep
+      grafana.ini:
+        auth.anonymous: # tailnet-only; every visitor is a read-only Viewer (ADR-0018)
+          enabled: true
+          org_role: Viewer
+        users:
+          allow_sign_up: false
+        analytics:
+          reporting_enabled: false
+          check_for_updates: false
+      sidecar:
+        resources: {requests: {cpu: 10m, memory: 96Mi}, limits: {memory: 96Mi}} # both sidecars (dashboards, datasources)
+        dashboards:
+          searchNamespace: ALL # dashboards live next to the component they show (ADR-0003 rule 6)
+    kube-state-metrics:
+      priorityClassName: platform
+      resources: {requests: {cpu: 20m, memory: 128Mi}, limits: {memory: 128Mi}}
+    prometheus-node-exporter:
+      priorityClassName: platform
+      resources: {requests: {cpu: 20m, memory: 64Mi}, limits: {memory: 64Mi}}
+    # The chart's sync job downloads rules and dashboards at install time. Upstream defaults point at
+    # floating master/main branches, so every source is pinned to a release tag or commit, even disabled ones (ADR-0033).
+    syncJob:
+      resources: {requests: {cpu: 10m, memory: 64Mi}, limits: {memory: 64Mi}}
+      podSecurityContext: {runAsNonRoot: true, runAsUser: 65534, seccompProfile: {type: RuntimeDefault}}
+      containerSecurityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+    defaultRules:
+      sources:
+        etcd: {url: https://raw.githubusercontent.com/monitoring-mixins/website/7b1f6de899ffdbdf59c807a32cd8a9a514231915/assets/etcd/alerts.yaml}
+        alertmanager: {url: https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.19.0/manifests/alertmanager-prometheusRule.yaml}
+        kubernetes-control-plane: {url: https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.19.0/manifests/kubernetesControlPlane-prometheusRule.yaml}
+        kubernetes: {url: https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.19.0/manifests/kubePrometheus-prometheusRule.yaml}
+        kube-state-metrics: {url: https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.19.0/manifests/kubeStateMetrics-prometheusRule.yaml}
+        node-exporter: {url: https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.19.0/manifests/nodeExporter-prometheusRule.yaml}
+        vmhealth: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/v1.154.1/deployment/docker/rules/alerts-health.yml}
+        vmagent: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/v1.154.1/deployment/docker/rules/alerts-vmagent.yml}
+        vmalert: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/v1.154.1/deployment/docker/rules/alerts-vmalert.yml}
+        vmsingle: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/v1.154.1/deployment/docker/rules/alerts-single-node.yml}
+        vmcluster: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/v1.154.1/deployment/docker/rules/alerts-cluster.yml}
+        vmoperator: {url: https://raw.githubusercontent.com/VictoriaMetrics/operator/v0.75.0/config/alerting/vmoperator-rules.yaml}
+        vlhealth: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaLogs/v1.53.0/deployment/docker/rules/alerts-health.yml}
+        vlagent: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaLogs/v1.53.0/deployment/docker/rules/alerts-vlagent.yml}
+        victorialogs: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaLogs/v1.53.0/deployment/docker/rules/alerts-vlogs.yml}
+        victoriatraces: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaTraces/v0.12.0/deployment/docker/rules/alerts-vtraces.yml}
+        vthealth: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaTraces/v0.12.0/deployment/docker/rules/alerts-health.yml}
+    defaultDashboards:
+      sources:
+        victoriatraces-cluster: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaTraces/v0.12.0/dashboards/victoriatraces-cluster.json}
+        victoriatraces-single-node: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaTraces/v0.12.0/dashboards/victoriatraces.json}
+        victorialogs-cluster: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaLogs/v1.53.0/dashboards/victorialogs-cluster.json}
+        victorialogs-single-node: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaLogs/v1.53.0/dashboards/victorialogs.json}
+        victorialogs-vlagent: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaLogs/v1.53.0/dashboards/vlagent.json}
+        victoriametrics-single-node: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/v1.154.1/dashboards/victoriametrics.json}
+        victoriametrics-vmagent: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/v1.154.1/dashboards/vmagent.json}
+        victoriametrics-cluster: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/v1.154.1/dashboards/victoriametrics-cluster.json}
+        victoriametrics-vmalert: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/v1.154.1/dashboards/vmalert.json}
+        victoriametrics-operator: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/v1.154.1/dashboards/operator.json}
+        victoriametrics-backupmanager: {url: https://raw.githubusercontent.com/VictoriaMetrics/VictoriaMetrics/v1.154.1/dashboards/backupmanager.json}
+        kubernetes-views-global: {url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/v3.0.8/dashboards/k8s-views-global.json}
+        kubernetes-views-namespaces: {url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/v3.0.8/dashboards/k8s-views-namespaces.json}
+        kubernetes-views-pods: {url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/v3.0.8/dashboards/k8s-views-pods.json}
+        kubernetes-views-nodes: {url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/v3.0.8/dashboards/k8s-views-nodes.json}
+        kubernetes-system-api-server: {url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/v3.0.8/dashboards/k8s-system-api-server.json}
+        kubernetes-system-coredns: {url: https://raw.githubusercontent.com/dotdc/grafana-dashboards-kubernetes/v3.0.8/dashboards/k8s-system-coredns.json}
+        node-exporter-full: {url: https://raw.githubusercontent.com/rfmoz/grafana-dashboards/6599fbd7ce10924377a7b1d113281c7ae7c03043/prometheus/node-exporter-full.json}
+        etcd: {url: https://raw.githubusercontent.com/monitoring-mixins/website/7b1f6de899ffdbdf59c807a32cd8a9a514231915/assets/etcd/dashboards/etcd.json}
+        kube-prometheus: {url: https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.19.0/manifests/grafana-dashboardDefinitions.yaml}
+    # Talos specifics (ADR-0007 controlplane/metrics.yaml opens these endpoints)
+    kubeControllerManager:
+      service:
+        selector: {k8s-app: kube-controller-manager}
+    kubeScheduler:
+      service:
+        selector: {k8s-app: kube-scheduler}
+    kubeEtcd: # etcd is a Talos service, not a pod: scrape the control plane's plain-HTTP metrics port
+      endpoints: ["${CONTROL_PLANE_IP}"]
+      service:
+        port: 2381
+        targetPort: 2381
+      vmScrape:
+        spec:
+          endpoints:
+            - port: http-metrics
+              scheme: http
