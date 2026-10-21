@@ -7,5 +7,4 @@ resources:
   - cilium/ks.yaml
   - gateway/ks.yaml
   - tailscale/ks.yaml
-  - cloudflared/ks.yaml
-  - external-dns/ks.yaml
+  # REHEARSAL: cloudflared and external-dns left out so public DNS is never touched (ADR-0025)
