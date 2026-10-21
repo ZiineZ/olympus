@@ -1,6 +1,6 @@
 # ADR-0003: Repository layout: numbered layers, one component shape
 
-- **Status:** Accepted (`talconfig.yaml` in the tree superseded by ADR-0028)
+- **Status:** Accepted (`talconfig.yaml` in the tree superseded by ADR-0028; `values.yaml` in the component shape superseded by ADR-0029)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0002, ADR-0004, ADR-0013, ADR-0015

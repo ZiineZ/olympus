@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+# Values are inline and read by the bootstrap too (ADR-0029). This component sits outside the
+# layers, so it states the uniform HelmRelease settings itself.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flux-operator
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: flux-operator
+  driftDetection:
+    mode: enabled
+  install:
+    crds: CreateReplace
+    remediation:
+      retries: 3
+  upgrade:
+    crds: CreateReplace
+    cleanupOnFail: true
+    remediation:
+      retries: 3
+      strategy: rollback
+  values:
+    priorityClassName: system-cluster-critical
+    resources: # memory request = limit, no CPU limit (ADR-0022); calibration knob
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: null
+        memory: 256Mi
+    web:
+      enabled: true # Flux Web UI, read-only for humans (ADR-0013); exposed on the tailnet in the core layer

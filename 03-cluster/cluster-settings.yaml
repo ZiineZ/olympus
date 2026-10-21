@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/configmap-v1.json
+# The ONLY place for values shared across components (ADR-0004). Manifests use them as ${VAR}
+# via Flux postBuild substitution. A variable joins when its first user does; the `substitutions`
+# check fails on a variable that is undefined or unused.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-settings
+  namespace: flux-system
+data:
+  LB_POOL_START: 192.168.50.200 # Cilium LoadBalancer pool (ADR-0009)
+  LB_POOL_END: 192.168.50.229

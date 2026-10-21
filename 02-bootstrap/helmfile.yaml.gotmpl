@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://json.schemastore.org/helmfile
+# Bootstrap (ADR-0015): installs only what Flux needs before it can run, then Flux adopts these
+# exact releases. Chart versions come from each ocirepository.yaml and values from each
+# helmrelease.yaml (ADR-0029), so nothing here can drift: never add a version or values literal.
+helmDefaults:
+  wait: true
+  waitForJobs: true
+  timeout: 600
+  cleanupOnFail: true
+
+releases:
+{{- range $r := list
+    (dict "name" "cilium" "namespace" "kube-system" "dir" "04-platform/01-network/cilium" "needs" "")
+    (dict "name" "flux-operator" "namespace" "flux-system" "dir" "03-cluster/flux-operator" "needs" "kube-system/cilium")
+    (dict "name" "flux-instance" "namespace" "flux-system" "dir" "03-cluster/flux-instance" "needs" "flux-system/flux-operator") }}
+{{- $oci := readFile (printf "../%s/app/ocirepository.yaml" $r.dir) | fromYaml }}
+{{- $hr := readFile (printf "../%s/app/helmrelease.yaml" $r.dir) | fromYaml }}
+  - name: {{ $r.name }}
+    namespace: {{ $r.namespace }}
+    chart: {{ $oci.spec.url }}
+    version: {{ $oci.spec.ref.tag }}
+    {{- if $r.needs }}
+    needs: [{{ $r.needs }}]
+    {{- end }}
+    values:
+      - {{- $hr.spec.values | toYaml | nindent 8 }}
+{{- end }}

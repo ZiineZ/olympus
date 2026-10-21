@@ -58,6 +58,28 @@ def yaml_load(path):
     return json.loads(out)
 
 
+def yaml_docs(text):
+    """All documents of a YAML stream (from a string), via yq, as Python objects."""
+    out = subprocess.run(["yq", "-o=json", "-I=0", "."], input=text, capture_output=True, text=True, check=True).stdout
+    return [json.loads(line) for line in out.splitlines() if line.strip() and line.strip() != "null"]
+
+
+# Namespaces that upstream requires instead of the folder name (ADR-0003 rule 4).
+NAMESPACE_EXCEPTIONS = {"cilium": "kube-system", "metrics-server": "kube-system",
+                        "flux-operator": "flux-system", "flux-instance": "flux-system"}
+COMPONENT_GLOBS = ["03-cluster/*/ks.yaml", "04-platform/*/*/ks.yaml", "05-apps/*/ks.yaml"]
+KUBECONFORM = ["kubeconform", "-strict", "-summary", "-ignore-missing-schemas", "-schema-location", "default",
+               "-schema-location", "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"]
+
+
+def flux_kustomizations(files):
+    """Every Flux Kustomization defined in git, plus the FluxInstance's root sync (path 03-cluster)."""
+    found = [{"metadata": {"name": "flux-system"}, "spec": {"path": "./03-cluster"}}]
+    for f in [f for g in COMPONENT_GLOBS for f in matches(g, files)] + matches("03-cluster/layers.yaml", files):
+        found += [d for d in yaml_docs((ROOT / f).read_text()) if d.get("kind") == "Kustomization"]
+    return found
+
+
 # --- repo checks -------------------------------------------------------------------------
 
 def check_root_clean(files):
@@ -144,6 +166,113 @@ def check_talos(files):
     return errs
 
 
+def check_component_shape(files):
+    errs = []
+    for ks in [f for g in COMPONENT_GLOBS for f in matches(g, files)]:
+        comp_dir = str(Path(ks).parent)
+        comp = Path(comp_dir).name
+        entries = {f[len(comp_dir) + 1:].split("/")[0] for f in files if f.startswith(comp_dir + "/")}
+        if extra := entries - {"ks.yaml", "app", "image"}:
+            errs.append(f"{comp_dir}: only ks.yaml, app/ and image/ are allowed (found {sorted(extra)})")
+        if f"{comp_dir}/app/kustomization.yaml" not in files:
+            errs.append(f"{comp_dir}: missing app/kustomization.yaml")
+        for k in [d for d in yaml_docs((ROOT / ks).read_text()) if d.get("kind") == "Kustomization"]:
+            name, meta = k["metadata"]["name"], k["metadata"]
+            missing = [a for a in ("olympus/description", "olympus/docs", "olympus/adr") if a not in meta.get("annotations", {})]
+            if missing:
+                errs.append(f"{ks}: Kustomization {name} lacks annotations {missing}")
+            if meta.get("namespace") != "flux-system":
+                errs.append(f"{ks}: Kustomization {name} must live in namespace flux-system")
+            if not k["spec"]["path"].startswith(f"./{comp_dir}/app"):
+                errs.append(f"{ks}: Kustomization {name} path must point into ./{comp_dir}/app")
+            for doc in meta.get("annotations", {}).get("olympus/docs", "").split(","):
+                if doc.strip() and doc.strip() not in files:
+                    errs.append(f"{ks}: olympus/docs path {doc.strip()} does not exist")
+        ns_file = ROOT / comp_dir / "app/namespace.yaml"
+        namespaces = {d.get("spec", {}).get("targetNamespace") for d in yaml_docs((ROOT / ks).read_text())} - {None}
+        if ns_file.exists():
+            namespaces.add(yaml_load(ns_file)["metadata"]["name"])
+        for ns in namespaces:
+            if ns != NAMESPACE_EXCEPTIONS.get(comp, comp):
+                errs.append(f"{comp_dir}: namespace {ns} must equal the folder name ({comp}) (ADR-0003 rule 4)")
+    return errs
+
+
+def check_orphans(files):
+    errs = []
+    def listed(kustomization):
+        return set(yaml_load(ROOT / kustomization).get("resources", []))
+    for group in sorted({str(Path(f).parent.parent) for f in matches("04-platform/*/*/ks.yaml", files)}):
+        want = {f"{Path(f).parent.name}/ks.yaml" for f in matches(f"{group}/*/ks.yaml", files)}
+        have = listed(f"{group}/kustomization.yaml") if f"{group}/kustomization.yaml" in files else set()
+        errs += [f"{group}/kustomization.yaml: {r} is not listed" for r in sorted(want - have)]
+        errs += [f"{group}/kustomization.yaml: {r} does not exist" for r in sorted(have - want)]
+        layer = f"layer-{Path(group).name}"
+        if "03-cluster/layers.yaml" not in files or not any(
+                k["metadata"]["name"] == layer and k["spec"]["path"] == f"./{group}"
+                for k in yaml_docs((ROOT / "03-cluster/layers.yaml").read_text())):
+            errs.append(f"03-cluster/layers.yaml: no Kustomization {layer} with path ./{group}")
+    if "03-cluster/kustomization.yaml" in files:
+        want = {f"{Path(f).parent.name}/ks.yaml" for f in matches("03-cluster/*/ks.yaml", files)}
+        errs += [f"03-cluster/kustomization.yaml: {r} is not listed" for r in sorted(want - listed("03-cluster/kustomization.yaml"))]
+    return errs
+
+
+def check_bootstrap_literals(files):
+    errs = []
+    for f in matches("02-bootstrap/*", files):
+        for n, line in enumerate((ROOT / f).read_text().splitlines(), 1):
+            if re.match(r"^\s*(version|chart):\s*[^{\s]", line):
+                errs.append(f"{f}:{n}: literal '{line.strip()}': versions and charts must come from ocirepository.yaml (ADR-0015)")
+    return errs
+
+
+def check_render(files):
+    """kustomize build every Flux path, substitute ${VARS}, validate; helm template every HelmRelease."""
+    if "03-cluster/kustomization.yaml" not in files:
+        return []
+    errs, used = [], set()
+    settings = yaml_load(ROOT / "03-cluster/cluster-settings.yaml")["data"]
+    kube_version = yaml_load(ROOT / "01-talos/cluster.yaml")["kubernetesVersion"].lstrip("v")
+    rendered = []
+    for k in flux_kustomizations(files):
+        path = k["spec"]["path"].lstrip("./")
+        build = subprocess.run(["kustomize", "build", str(ROOT / path)], capture_output=True, text=True)
+        if build.returncode:
+            errs.append(f"kustomize build {path}: {build.stderr.strip().splitlines()[-1]}")
+            continue
+        def substitute(m):
+            used.add(m.group(1))
+            if m.group(1) not in settings:
+                errs.append(f"{path}: ${{{m.group(1)}}} is not defined in 03-cluster/cluster-settings.yaml")
+            return settings.get(m.group(1), "")
+        text = re.sub(r"\$\{([A-Z0-9_]+)\}", substitute, build.stdout)
+        rendered.append((path, k.get("spec", {}).get("targetNamespace"), text))
+    errs += [f"cluster-settings: {v} is defined but never used" for v in sorted(set(settings) - used)]
+    for path, target_ns, text in rendered:
+        check = subprocess.run(KUBECONFORM, input=text, capture_output=True, text=True)
+        if check.returncode:
+            errs += [f"{path}: {l}" for l in check.stdout.splitlines() if "is invalid" in l or "failed" in l.lower()][:10]
+        docs = yaml_docs(text)
+        sources = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "OCIRepository"}
+        for hr in [d for d in docs if d.get("kind") == "HelmRelease"]:
+            src = sources.get(hr["spec"].get("chartRef", {}).get("name"))
+            if not src:
+                errs.append(f"{path}: HelmRelease {hr['metadata']['name']} has no OCIRepository in the same folder")
+                continue
+            ns = target_ns or hr["metadata"].get("namespace", "default")
+            tpl = subprocess.run(["helm", "template", hr["metadata"]["name"], src["spec"]["url"], "--version", src["spec"]["ref"]["tag"],
+                                  "--namespace", ns, "--kube-version", kube_version, "--include-crds", "-f", "-"],
+                                 input=json.dumps(hr["spec"].get("values", {})), capture_output=True, text=True)
+            if tpl.returncode:
+                errs.append(f"{path}: helm template {hr['metadata']['name']}: {tpl.stderr.strip().splitlines()[-1]}")
+                continue
+            check = subprocess.run(KUBECONFORM, input=tpl.stdout, capture_output=True, text=True)
+            if check.returncode:
+                errs += [f"{path} (helm {hr['metadata']['name']}): {l}" for l in check.stdout.splitlines() if "is invalid" in l][:10]
+    return errs
+
+
 # --- PR checks ---------------------------------------------------------------------------
 
 def changed_files(base):
@@ -209,6 +338,10 @@ def main():
         "doc-links": check_doc_links(files),
         "no-versions-in-docs": check_no_versions_in_docs(files),
         "talos": check_talos(files),
+        "component-shape": check_component_shape(files),
+        "orphans": check_orphans(files),
+        "bootstrap-literals": check_bootstrap_literals(files),
+        "render": check_render(files),
     }
     if "--pr" in sys.argv:
         results["sync-rules"] = check_sync_rules(changed_files(os.environ["BASE_REF"]), os.environ.get("PR_BODY", ""))

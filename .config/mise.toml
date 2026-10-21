@@ -9,7 +9,7 @@ lockfile = true # .config/mise.lock pins per-platform URLs + checksums
 SOPS_AGE_KEY_FILE = "{{env.HOME}}/.config/sops/age/keys.txt"
 
 [tools]
-# repo checks (CI installs only these two)
+# repo checks (CI installs only these)
 python = "3.14.8"
 yq = "4.54.1"
 # GitHub settings as code
@@ -46,6 +46,19 @@ run = "python3 .github/settings/apply.py apply"
 [tasks."github:diff"]
 description = "Show drift between .github/settings/ and the live GitHub repo."
 run = "python3 .github/settings/apply.py diff"
+
+[tasks."bootstrap:apps"]
+description = "Install Cilium + Flux on a fresh cluster so Flux can take over (ADR-0015). Needs KUBECONFIG and the age key."
+shell = "bash -c"
+run = '''
+set -euo pipefail
+test -f "$SOPS_AGE_KEY_FILE" || { echo "age key not found at $SOPS_AGE_KEY_FILE" >&2; exit 1; }
+kubectl get namespace flux-system >/dev/null 2>&1 || kubectl create namespace flux-system
+kubectl -n flux-system create secret generic sops-age --from-file=age.agekey="$SOPS_AGE_KEY_FILE" \
+  --dry-run=client -o yaml | kubectl apply --server-side -f -
+kubectl apply --server-side -k 04-platform/01-network/gateway-api-crds/app
+helmfile --file 02-bootstrap/helmfile.yaml.gotmpl sync
+'''
 
 [tasks."rehearsal:up"]
 description = "Throwaway Talos cluster in Docker/OrbStack (ADR-0025). Run only on Stan's go."

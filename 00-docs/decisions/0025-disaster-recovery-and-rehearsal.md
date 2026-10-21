@@ -1,6 +1,6 @@
 # ADR-0025: Disaster recovery and the rehearsal environment
 
-- **Status:** Accepted
+- **Status:** Accepted (rule 6's `values.yaml` is `helmrelease.yaml` per ADR-0029)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0001, ADR-0014, ADR-0015, ADR-0017

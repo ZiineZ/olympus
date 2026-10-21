@@ -1,0 +1,80 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+# Values are inline and read by the bootstrap too (ADR-0029), so they must not use ${VAR}s.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cilium
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: cilium
+  values:
+    # Talos integration: KubePrism on localhost:7445, Talos-managed cgroups, no SYS_MODULE
+    k8sServiceHost: localhost
+    k8sServicePort: 7445
+    cgroup:
+      autoMount:
+        enabled: false
+      hostRoot: /sys/fs/cgroup
+    securityContext:
+      capabilities:
+        ciliumAgent: [CHOWN, KILL, NET_ADMIN, NET_RAW, IPC_LOCK, SYS_ADMIN, SYS_RESOURCE, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+        cleanCiliumState: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE]
+    # Datapath (ADR-0010)
+    kubeProxyReplacement: true
+    ipam:
+      mode: kubernetes
+    routingMode: native
+    autoDirectNodeRoutes: true # all nodes share one L2 segment
+    ipv4NativeRoutingCIDR: 10.244.0.0/16
+    bpf:
+      masquerade: true
+      datapathMode: auto # netkit where the kernel supports it, veth elsewhere (mixed fleet)
+    bandwidthManager:
+      enabled: true
+      bbr: true
+    loadBalancer:
+      algorithm: maglev
+    # LoadBalancer IPs on the LAN (pool + policy in ./config)
+    l2announcements:
+      enabled: true
+    externalIPs:
+      enabled: true
+    k8sClientRateLimit: # L2 announcement leases talk to the API often
+      qps: 20
+      burst: 40
+    # Gateway API (ADR-0011)
+    gatewayAPI:
+      enabled: true
+    # Hubble: live flows (ADR-0010); UI exposed on the tailnet in the core layer
+    hubble:
+      enabled: true
+      relay:
+        enabled: true
+        resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {memory: 128Mi}}
+      ui:
+        enabled: true
+        backend:
+          resources: {requests: {cpu: 50m, memory: 64Mi}, limits: {memory: 64Mi}}
+        frontend:
+          resources: {requests: {cpu: 10m, memory: 64Mi}, limits: {memory: 64Mi}}
+      metrics: # scraped once the observability layer exists
+        enabled:
+          - dns
+          - drop
+          - tcp
+          - flow
+          - port-distribution
+          - icmp
+          - httpV2:exemplars=true;labelsContext=source_namespace,destination_namespace
+    operator:
+      replicas: 1 # one until there are 3+ nodes
+      rollOutPods: true
+      resources: {requests: {cpu: 50m, memory: 256Mi}, limits: {memory: 256Mi}}
+    rollOutCiliumPods: true
+    # memory request = limit, no CPU limit (ADR-0022); calibration knobs, re-sized from metrics
+    resources: {requests: {cpu: 100m, memory: 512Mi}, limits: {memory: 512Mi}}
+    envoy:
+      rollOutPods: true
+      resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {memory: 128Mi}}

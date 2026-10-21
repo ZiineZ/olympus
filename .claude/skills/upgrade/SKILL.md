@@ -30,7 +30,7 @@ Policy sources: **ADR-0023** (Renovate and tuppr) and **ADR-0008** (the Kubernet
    helm show values oci://<registry>/<chart> --version <new> > /tmp/new.yaml
    diff -u /tmp/old.yaml /tmp/new.yaml
    ```
-   Then check every key that our `values.yaml` sets against the diff.
+   Then check every key that our `spec.values` (in `helmrelease.yaml`) sets against the diff.
 3. **Check the rendered diff** (flate output on the PR). Any changed object besides the version labels needs an explanation.
 4. **Check compatibility:**
    - The Talos support matrix covers the target Kubernetes version.
