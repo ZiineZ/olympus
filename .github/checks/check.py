@@ -250,26 +250,35 @@ def check_render(files):
         rendered.append((path, k.get("spec", {}).get("targetNamespace"), text))
     errs += [f"cluster-settings: {v} is defined but never used" for v in sorted(set(settings) - used)]
     for path, target_ns, text in rendered:
+        # validate what Flux applies: the sops block is removed when Flux decrypts a Secret
+        text = subprocess.run(["yq", "del(.sops)"], input=text, capture_output=True, text=True, check=True).stdout
         check = subprocess.run(KUBECONFORM, input=text, capture_output=True, text=True)
         if check.returncode:
             errs += [f"{path}: {l}" for l in check.stdout.splitlines() if "is invalid" in l or "failed" in l.lower()][:10]
         docs = yaml_docs(text)
-        sources = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "OCIRepository"}
+        oci = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "OCIRepository"}
+        repos = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "HelmRepository"}
         for hr in [d for d in docs if d.get("kind") == "HelmRelease"]:
-            src = sources.get(hr["spec"].get("chartRef", {}).get("name"))
-            if not src:
-                errs.append(f"{path}: HelmRelease {hr['metadata']['name']} has no OCIRepository in the same folder")
+            name, spec = hr["metadata"]["name"], hr["spec"]
+            if "chartRef" in spec and spec["chartRef"]["name"] in oci:  # OCI chart (preferred, ADR-0013)
+                src = oci[spec["chartRef"]["name"]]["spec"]
+                chart = [src["url"], "--version", src["ref"]["tag"]]
+            elif spec.get("chart", {}).get("spec", {}).get("sourceRef", {}).get("name") in repos:  # classic Helm repository
+                cs = spec["chart"]["spec"]
+                chart = [cs["chart"], "--repo", repos[cs["sourceRef"]["name"]]["spec"]["url"], "--version", cs["version"]]
+            else:
+                errs.append(f"{path}: HelmRelease {name} has no OCIRepository/HelmRepository in the same folder")
                 continue
             ns = target_ns or hr["metadata"].get("namespace", "default")
-            tpl = subprocess.run(["helm", "template", hr["metadata"]["name"], src["spec"]["url"], "--version", src["spec"]["ref"]["tag"],
-                                  "--namespace", ns, "--kube-version", kube_version, "--include-crds", "-f", "-"],
-                                 input=json.dumps(hr["spec"].get("values", {})), capture_output=True, text=True)
+            tpl = subprocess.run(["helm", "template", name, *chart, "--namespace", ns, "--kube-version", kube_version,
+                                  "--include-crds", "-f", "-"],
+                                 input=json.dumps(spec.get("values", {})), capture_output=True, text=True)
             if tpl.returncode:
-                errs.append(f"{path}: helm template {hr['metadata']['name']}: {tpl.stderr.strip().splitlines()[-1]}")
+                errs.append(f"{path}: helm template {name}: {tpl.stderr.strip().splitlines()[-1]}")
                 continue
             check = subprocess.run(KUBECONFORM, input=tpl.stdout, capture_output=True, text=True)
             if check.returncode:
-                errs += [f"{path} (helm {hr['metadata']['name']}): {l}" for l in check.stdout.splitlines() if "is invalid" in l][:10]
+                errs += [f"{path} (helm {name}): {l}" for l in check.stdout.splitlines() if "is invalid" in l][:10]
     return errs
 
 

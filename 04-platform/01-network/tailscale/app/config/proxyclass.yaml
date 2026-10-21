@@ -1,0 +1,11 @@
+# Every proxy the operator creates (one per tailnet Ingress/Service) gets these settings (ADR-0022).
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
+metadata:
+  name: default
+spec:
+  statefulSet:
+    pod:
+      priorityClassName: platform
+      tailscaleContainer:
+        resources: {requests: {cpu: 10m, memory: 64Mi}, limits: {memory: 64Mi}}

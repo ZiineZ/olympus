@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - cluster-settings.yaml
   - priority-classes.yaml
+  - cluster-read.yaml
   - flux-operator/ks.yaml
   - flux-instance/ks.yaml
   - layers.yaml

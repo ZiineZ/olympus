@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/ingress-networking-v1.json
+# Hubble UI (live traffic flows) at https://hubble<suffix>.<tailnet>.ts.net, tailnet-only (ADR-0011 tier 2).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hubble-ui
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: hubble-ui
+      port:
+        number: 80
+  tls:
+    - hosts: ["hubble${TS_HOST_SUFFIX}"]

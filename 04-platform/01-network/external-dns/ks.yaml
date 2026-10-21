@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: external-dns
+  namespace: flux-system
+  annotations:
+    olympus/description: external-dns. Creates proxied Cloudflare CNAMEs for public HTTPRoutes; touches only records it owns.
+    olympus/docs: 00-docs/architecture.md
+    olympus/adr: "0011"
+spec:
+  interval: 10m
+  path: ./04-platform/01-network/external-dns/app
+  targetNamespace: external-dns
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: gateway

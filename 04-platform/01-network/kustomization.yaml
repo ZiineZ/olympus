@@ -5,3 +5,7 @@ kind: Kustomization
 resources:
   - gateway-api-crds/ks.yaml
   - cilium/ks.yaml
+  - gateway/ks.yaml
+  - tailscale/ks.yaml
+  - cloudflared/ks.yaml
+  - external-dns/ks.yaml

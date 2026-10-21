@@ -32,7 +32,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 
 - **Root:** only `00-docs` through `05-apps`, plus `.claude/ .github/ .config/ .sops.yaml .gitignore`.
 - **Layers and groups:** a layer depends only on lower numbers. Groups are a closed set; a new group is appended with the next number and nothing is ever renumbered.
-- **Component shape:** `<component>/ks.yaml` plus `app/{kustomization, namespace, ocirepository, helmrelease, *.sops}.yaml`, with Helm values inline in `helmrelease.yaml` ([ADR-0029](decisions/0029-bootstrap-layer-corrections.md)). A second Flux Kustomization, needed for CRD ordering, points into a subfolder of `app/`. The only extra folder allowed beside `app/` is `image/`, and only for components that build their own image.
+- **Component shape:** `<component>/ks.yaml` plus `app/{kustomization, namespace, ocirepository, helmrelease, *.sops}.yaml` (`helmrepository.yaml` instead of `ocirepository.yaml` only when the publisher has no OCI registry), with Helm values inline in `helmrelease.yaml` ([ADR-0029](decisions/0029-bootstrap-layer-corrections.md)). A second Flux Kustomization, needed for CRD ordering, points into a subfolder of `app/`. The only extra folder allowed beside `app/` is `image/`, and only for components that build their own image.
 - **Namespace = folder name.** The exceptions are `cilium` and `metrics-server` (in `kube-system`) and `flux-operator` and `flux-instance` (in `flux-system`).
 - **Cohesion:** everything about X lives in X's folder.
 - Every manifest starts with a `# yaml-language-server: $schema=…` line.
@@ -104,7 +104,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 
 - **Uniform Flux settings** live once, in `03-cluster/flux-defaults.yaml`. They are applied to every component Kustomization (`wait`, timeouts, `cluster-settings` substitution) and every HelmRelease (drift detection, CRD handling, remediation) through the layers. Components never repeat them.
 - **Intervals:** each `ks.yaml` sets 10m and each HelmRelease 30m.
-- **SOPS decryption** is switched on once, at kustomize-controller.
+- **SOPS decryption** needs two things: the age key at kustomize-controller (`--sops-age-secret`), and `decryption: {provider: sops}` on every component Kustomization (set in `flux-defaults.yaml`) ([ADR-0030](decisions/0030-sops-decryption-opt-in.md)).
 - **Bootstrapped releases** (Cilium, flux-operator, flux-instance) must not use `${VAR}`s in their values, because helmfile reads them as-is.
 - **Charts** come from `OCIRepository`, pinned and verified with cosign wherever the publisher signs them. There is no image automation.
 - **Secrets:** every `Secret` lives in a `*.sops.yaml` file next to the component that uses it. Secret Helm values are passed through `valuesFrom`.

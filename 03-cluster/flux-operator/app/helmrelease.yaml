@@ -32,4 +32,11 @@ spec:
         cpu: null
         memory: 256Mi
     web:
-      enabled: true # Flux Web UI, read-only for humans (ADR-0013); exposed on the tailnet in the core layer
+      enabled: true # Flux Web UI on the tailnet (./ingress.yaml)
+      config: # the Web Config *spec* (the chart adds apiVersion/kind). Every visitor acts as olympus:viewers:
+        # read-only, so UI actions can't create drift (ADR-0013)
+        authentication:
+          type: Anonymous
+          anonymous:
+            username: flux-web-viewer # Kubernetes can't impersonate a group without a user; no RBAC binds this name
+            groups: [olympus:viewers]
