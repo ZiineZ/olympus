@@ -56,6 +56,7 @@ test -f "$SOPS_AGE_KEY_FILE" || { echo "age key not found at $SOPS_AGE_KEY_FILE"
 kubectl get namespace flux-system >/dev/null 2>&1 || kubectl create namespace flux-system
 kubectl -n flux-system create secret generic sops-age --from-file=age.agekey="$SOPS_AGE_KEY_FILE" \
   --dry-run=client -o yaml | kubectl apply --server-side -f -
+kubectl apply --server-side -f 03-cluster/priority-classes.yaml # Cilium pods reference them; Flux adopts them
 kubectl apply --server-side -k 04-platform/01-network/gateway-api-crds/app
 helmfile --file 02-bootstrap/helmfile.yaml.gotmpl sync
 '''

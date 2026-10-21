@@ -52,9 +52,11 @@ spec:
       enabled: true
       relay:
         enabled: true
+        priorityClassName: platform
         resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {memory: 128Mi}}
       ui:
         enabled: true
+        priorityClassName: platform
         backend:
           resources: {requests: {cpu: 50m, memory: 64Mi}, limits: {memory: 64Mi}}
         frontend:
