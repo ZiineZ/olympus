@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cilium
+  namespace: flux-system
+  annotations:
+    olympus/description: Cilium, the CNI. Replaces kube-proxy; also does LoadBalancer IPs, Gateway API, network policy and Hubble flows.
+    olympus/docs: 00-docs/architecture.md
+    olympus/adr: "0010"
+spec:
+  interval: 10m
+  path: ./04-platform/01-network/cilium/app
+  targetNamespace: kube-system
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: gateway-api-crds
+---
+# The IP pool and L2 policy are Cilium CRs: they can only apply once Cilium has created its CRDs.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cilium-config
+  namespace: flux-system
+  annotations:
+    olympus/description: Cilium LoadBalancer IP pool and L2 announcement policy.
+    olympus/docs: 00-docs/architecture.md
+    olympus/adr: "0009,0010"
+spec:
+  interval: 10m
+  path: ./04-platform/01-network/cilium/app/config
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: cilium

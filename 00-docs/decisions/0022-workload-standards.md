@@ -1,6 +1,6 @@
 # ADR-0022: Workload standards: resources, priority, security, networking, packaging
 
-- **Status:** Accepted
+- **Status:** Accepted (Flux's PriorityClass superseded by ADR-0029)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0001, ADR-0003, ADR-0016, ADR-0017, ADR-0021

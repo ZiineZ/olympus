@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://json.schemastore.org/kustomization
+# The Flux entrypoint (ADR-0003, ADR-0013). FluxInstance syncs this folder; everything else hangs off it.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - cluster-settings.yaml
+  - priority-classes.yaml
+  - flux-operator/ks.yaml
+  - flux-instance/ks.yaml
+  - layers.yaml
+patches:
+  # Uniform settings for every component Kustomization and HelmRelease, written once (ADR-0029).
+  - path: flux-defaults.yaml
+    target:
+      group: kustomize.toolkit.fluxcd.io
+      kind: Kustomization
+      name: layer-.*

@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 env:
-  MISE_TASK_RUN_AUTO_INSTALL: "false" # `mise run` must not pull the full toolchain; CI installs python + yq only
+  MISE_TASK_RUN_AUTO_INSTALL: "false" # `mise run` must not pull the full toolchain; install_args below is the list
 
 concurrency:
   group: validate-${{ github.event.pull_request.number || github.ref }}
@@ -31,7 +31,7 @@ jobs:
       - uses: jdx/mise-action@fc42bcc7ddbf51124c30f95a877a0c5168a3bfde # v5.2.1
         with:
           version: 2026.10.15
-          install_args: python yq # checks need only these; the rest of the toolchain is for humans + Athena
+          install_args: python yq helm kustomize kubeconform # what the checks run; the rest is for humans + Athena
 
       - name: Self-test
         run: python3 .github/checks/check.py --selftest

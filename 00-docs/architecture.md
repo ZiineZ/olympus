@@ -66,17 +66,7 @@ The full plan is in [ADR-0009](decisions/0009-network-addressing-and-hardware.md
 
 - **The LAN** is `192.168.50.0/24`, behind Stan's own router, which sits behind the dorm repeater (double NAT). There is no port forwarding.
 - **Inside the cluster:** pods use `10.244.0.0/16` and services use `10.96.0.0/12`. Cilium does native routing, replaces kube-proxy, and runs Hubble.
-- **Shared values** come from `03-cluster/cluster-settings.yaml`. Manifests reference them as `${VAR}`:
-
-  | Variable | Meaning |
-  |---|---|
-  | `CLUSTER_NAME` | `olympus` |
-  | `CLUSTER_API_VIP` | Kubernetes API VIP |
-  | `LB_POOL_START`, `LB_POOL_END` | Cilium LoadBalancer pool |
-  | `PUBLIC_DOMAIN` | public apex domain (Cloudflare) |
-  | `TAILNET` | Tailscale tailnet domain |
-  | `TS_HOST_SUFFIX` | empty in production, `-rehearsal` in rehearsal |
-  | `TIMEZONE` | `Europe/Amsterdam` |
+- **Shared values** (LoadBalancer pool, and later domain and tailnet) come from `03-cluster/cluster-settings.yaml`, the only list of them. Manifests reference them as `${VAR}`. A variable is added with its first user; the `render` check fails on one that is undefined or unused.
 
 ### Traffic paths
 

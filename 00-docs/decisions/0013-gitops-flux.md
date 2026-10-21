@@ -1,6 +1,6 @@
 # ADR-0013: GitOps engine: Flux, installed and managed by the Flux Operator
 
-- **Status:** Accepted
+- **Status:** Accepted (rules 3–4's defaults mechanism superseded by ADR-0029)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0003, ADR-0004, ADR-0014, ADR-0015

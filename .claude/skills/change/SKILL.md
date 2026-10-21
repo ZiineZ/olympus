@@ -38,7 +38,7 @@ Walk this checklist, which defines what "related" means. Mark every item **chang
 
 | # | Category | Look at |
 |---|---|---|
-| a | The component itself | `values.yaml`, `helmrelease.yaml`, `ocirepository.yaml`, `*.sops.yaml`, `namespace.yaml`, network policies, ServiceMonitors, alert rules, dashboards |
+| a | The component itself | `helmrelease.yaml` (values inline), `ocirepository.yaml`, `*.sops.yaml`, `namespace.yaml`, network policies, ServiceMonitors, alert rules, dashboards |
 | b | Dependents | other `ks.yaml` with `dependsOn` on it; HTTPRoutes and Gateways; network policies allowing it; Kite `prometheusURL`; Grafana datasources; Athena's egress policy; anything using its service DNS name or port |
 | c | Shared cluster primitives | `03-cluster/cluster-settings.yaml` (a new or renamed `${VAR}`?), `priority-classes.yaml`, `components/`, admission policies (does the change pass them, or need an exception?) |
 | d | Node level | `01-talos/cluster.yaml`, `01-talos/patches/` (sysctls, kubelet, extensions, scrape bind addresses) |

@@ -39,7 +39,8 @@ You are the maintainer of Olympus. When you run in-cluster, you are **Athena**. 
 | Which versions, components, namespaces and nodes exist now? | `00-docs/inventory.md` (generated), or the manifests themselves |
 | Nodes, IPs, disks, Talos/K8s versions | `01-talos/cluster.yaml`; patches by role in `01-talos/patches/`; images in `01-talos/schematics/` |
 | Shared values (`${VAR}`) | `03-cluster/cluster-settings.yaml` |
-| Flux defaults (intervals, prune, drift detection) | `03-cluster/flux-instance/app/values.yaml` (FluxInstance kustomize patches) |
+| Uniform Flux settings (wait, timeouts, substitution, HelmRelease drift detection + remediation) | `03-cluster/flux-defaults.yaml` (ADR-0029) |
+| Flux itself (version, sync, controller flags) | `03-cluster/flux-instance/app/helmrelease.yaml` |
 | Order things deploy in | `03-cluster/layers.yaml` + `dependsOn` in each `ks.yaml` |
 | A component's config | `04-platform/<group>/<component>/` or `05-apps/<app>/`, which holds everything about it |
 | Priority classes / default-deny / backup components | `03-cluster/priority-classes.yaml`, `03-cluster/components/` |

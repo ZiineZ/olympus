@@ -32,7 +32,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 
 - **Root:** only `00-docs` through `05-apps`, plus `.claude/ .github/ .config/ .sops.yaml .gitignore`.
 - **Layers and groups:** a layer depends only on lower numbers. Groups are a closed set; a new group is appended with the next number and nothing is ever renumbered.
-- **Component shape:** `<component>/ks.yaml` plus `app/{kustomization, namespace, ocirepository, helmrelease, values, *.sops}.yaml`. The only extra folder allowed is `image/`, and only for components that build their own image.
+- **Component shape:** `<component>/ks.yaml` plus `app/{kustomization, namespace, ocirepository, helmrelease, *.sops}.yaml`, with Helm values inline in `helmrelease.yaml` ([ADR-0029](decisions/0029-bootstrap-layer-corrections.md)). A second Flux Kustomization, needed for CRD ordering, points into a subfolder of `app/`. The only extra folder allowed beside `app/` is `image/`, and only for components that build their own image.
 - **Namespace = folder name.** The exceptions are `cilium` and `metrics-server` (in `kube-system`) and `flux-operator` and `flux-instance` (in `flux-system`).
 - **Cohesion:** everything about X lives in X's folder.
 - Every manifest starts with a `# yaml-language-server: $schema=…` line.
@@ -47,7 +47,8 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
   | Talos and Kubernetes versions | `01-talos/cluster.yaml` and the tuppr CRs (must match) |
   | Shared values | `03-cluster/cluster-settings.yaml` |
   | Nodes and IPs | `01-talos/cluster.yaml` |
-  | Helm values | `app/values.yaml` |
+  | Helm values | inline in `app/helmrelease.yaml` (`spec.values`) |
+  | Uniform Flux settings | `03-cluster/flux-defaults.yaml` |
   | Rules | this file |
   | CLI versions | `.config/mise.toml` |
 
@@ -74,7 +75,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 - `mise install` provides the whole toolchain.
 - **mise tasks are the only imperative entrypoints.** `mise tasks` lists the ones that exist today. They are defined only in `.config/mise.toml`, and each task is added in the phase that first needs it (target set: ADR-0006).
 - **A tool joins `.config/mise.toml` in the phase that first needs it.** `.config/mise.lock` pins checksums for linux-x64, macos-arm64, and macos-x64. Regenerate it with `mise lock --platform linux-x64,macos-arm64,macos-x64` whenever a version changes.
-- **CI installs only `python` and `yq`.**
+- **CI installs only what the checks run:** `python`, `yq`, `helm`, `kustomize`, `kubeconform`.
 - Check scripts use the Python standard library only.
 
 ## Nodes ([ADR-0007](decisions/0007-operating-system-talos-linux.md), [ADR-0008](decisions/0008-cluster-topology-and-versions.md), [ADR-0009](decisions/0009-network-addressing-and-hardware.md))
@@ -101,9 +102,10 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 
 ## GitOps and secrets ([ADR-0013](decisions/0013-gitops-flux.md), [ADR-0014](decisions/0014-secrets-sops-age.md), [ADR-0015](decisions/0015-bootstrap-sequence.md))
 
-- **Flux defaults** are set once, in the FluxInstance patches:
-  - Kustomizations reconcile every 10m, with `prune` and `wait`.
-  - HelmReleases reconcile every 30m, with `driftDetection: enabled`.
+- **Uniform Flux settings** live once, in `03-cluster/flux-defaults.yaml`. They are applied to every component Kustomization (`wait`, timeouts, `cluster-settings` substitution) and every HelmRelease (drift detection, CRD handling, remediation) through the layers. Components never repeat them.
+- **Intervals:** each `ks.yaml` sets 10m and each HelmRelease 30m.
+- **SOPS decryption** is switched on once, at kustomize-controller.
+- **Bootstrapped releases** (Cilium, flux-operator, flux-instance) must not use `${VAR}`s in their values, because helmfile reads them as-is.
 - **Charts** come from `OCIRepository`, pinned and verified with cosign wherever the publisher signs them. There is no image automation.
 - **Secrets:** every `Secret` lives in a `*.sops.yaml` file next to the component that uses it. Secret Helm values are passed through `valuesFrom`.
 - **The age key** is kept in Stan's password manager and on paper. It never goes in the cluster, CI, or Athena. Its public key is the single recipient in `.sops.yaml`. Anyone can **encrypt** with it, Athena included; only Stan can **decrypt**.
@@ -127,7 +129,8 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 
 - **Resources:** every container sets a CPU request, a memory request, and a memory limit, with **memory limit = request** and **no CPU limit**.
 - **PriorityClasses:**
-  - `platform-critical`: Flux, cloudflared, tailscale
+  - built-in `system-cluster-critical`: Flux. It must exist before Flux does ([ADR-0029](decisions/0029-bootstrap-layer-corrections.md)).
+  - `platform-critical`: cloudflared, tailscale
   - `platform`: other platform components
   - `apps`: the default
   - `agent`: Athena

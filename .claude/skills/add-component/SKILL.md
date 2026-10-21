@@ -39,7 +39,6 @@ Copy the **most similar existing component** and adapt it, so the repo itself is
 - [ ] Lists every file in `app/`.
 - [ ] `components:` includes `../../../03-cluster/components/default-deny` (adjust the relative path).
 - [ ] If the component has PVCs, it also includes `…/components/backup`. Otherwise the namespace has `olympus/backup: none` + a reason.
-- [ ] A `configMapGenerator` turns `values.yaml` into the ConfigMap the HelmRelease reads (`valuesFrom`).
 
 **`app/namespace.yaml`**
 - [ ] `name` = the folder name.
@@ -48,10 +47,10 @@ Copy the **most similar existing component** and adapt it, so the repo itself is
 
 **`app/ocirepository.yaml` + `app/helmrelease.yaml`**
 - [ ] The chart is pinned to an exact tag, plus `verify` (cosign) where the publisher signs.
-- [ ] The HelmRelease sets only what differs from the FluxInstance defaults. Drift detection and remediation are inherited, so don't repeat them.
-- [ ] Secret values come through `valuesFrom` a `*.sops.yaml` Secret, never through `values.yaml`.
+- [ ] The HelmRelease sets `interval` and `chartRef`. Everything in `03-cluster/flux-defaults.yaml` (drift detection, CRD handling, remediation) comes from the layer, so **never** repeat it (ADR-0029).
+- [ ] Secret values come through `valuesFrom` a `*.sops.yaml` Secret, never inline.
 
-**`app/values.yaml`**
+**Values (inline in `helmrelease.yaml` under `spec.values`)**
 - [ ] Every container: `requests.cpu`, `requests.memory`, `limits.memory` (= request), **no `limits.cpu`**. Add a sizing comment saying where the numbers came from.
 - [ ] `priorityClassName`: `platform-critical` | `platform` for platform components. Leave it unset for apps (`apps` is the global default).
 - [ ] securityContext: runAsNonRoot, no privilege escalation, drop ALL, seccomp RuntimeDefault, read-only root filesystem where possible, `hostUsers: false` where supported.

@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: gateway-api-crds
+  namespace: flux-system
+  annotations:
+    olympus/description: Gateway API CRDs (standard channel), the routing API Cilium implements.
+    olympus/docs: 00-docs/architecture.md
+    olympus/adr: "0010,0011"
+spec:
+  interval: 10m
+  path: ./04-platform/01-network/gateway-api-crds/app
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system

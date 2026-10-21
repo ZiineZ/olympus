@@ -1,0 +1,17 @@
+# One Flux Kustomization per 04-platform group, chained in dependency order (ADR-0003).
+# A group joins this file in the PR that adds its first component.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: layer-01-network
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./04-platform/01-network
+  prune: true
+  wait: false # each component reports its own health
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: flux-instance
