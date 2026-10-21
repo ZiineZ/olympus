@@ -1,6 +1,6 @@
 # ADR-0002: Naming: the Greek pantheon for identities, functional names for everything else
 
-- **Status:** Accepted
+- **Status:** Accepted (the `olympus/policy` label superseded by ADR-0031)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0003, ADR-0008, ADR-0009, ADR-0024

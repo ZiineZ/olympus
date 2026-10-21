@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/gitrepository-source-v1.json
+# The chart is only published inside the project's git repo, so Flux reads it at a pinned tag (ADR-0016).
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: local-path-provisioner
+spec:
+  interval: 1h
+  url: https://github.com/rancher/local-path-provisioner
+  ref:
+    tag: v0.0.37
+  ignore: |
+    /*
+    !/deploy/chart/

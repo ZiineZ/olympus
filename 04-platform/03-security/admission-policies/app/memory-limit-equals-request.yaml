@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/validatingadmissionpolicy-admissionregistration-v1.json
+# limits.memory equals requests.memory, so OOM behaviour is deterministic (ADR-0022). Stays Warn + Audit.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: memory-limit-equals-request
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [apps]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [deployments, statefulsets, daemonsets]
+      - apiGroups: [batch]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [jobs, cronjobs]
+  variables:
+    - name: template
+      expression: "object.kind == 'CronJob' ? object.spec.jobTemplate.spec.template : object.spec.template"
+    - name: containers
+      expression: "variables.template.spec.containers + (has(variables.template.spec.initContainers) ? variables.template.spec.initContainers : [])"
+    - name: unequal
+      expression: >-
+        variables.containers.filter(c, has(c.resources) && has(c.resources.requests) && has(c.resources.limits)
+        && 'memory' in c.resources.requests && 'memory' in c.resources.limits
+        && quantity(c.resources.limits.memory).compareTo(quantity(c.resources.requests.memory)) != 0).map(c, c.name)
+  validations:
+    - expression: "size(variables.unequal) == 0"
+      messageExpression: "'containers whose memory limit differs from the request (ADR-0022): ' + variables.unequal.join(', ')"
+---
+# Warn + Audit first; strict policies switch to [Deny] in a follow-up PR after a week (ADR-0021 rule 4).
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: memory-limit-equals-request
+spec:
+  policyName: memory-limit-equals-request
+  validationActions: [Warn, Audit]
+  matchResources:
+    namespaceSelector: # exemptions: only namespaces whose objects upstream operators create (ADR-0031)
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: [kube-system, flux-system]

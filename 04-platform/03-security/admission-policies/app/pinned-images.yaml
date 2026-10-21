@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/validatingadmissionpolicy-admissionregistration-v1.json
+# Images carry an explicit tag or digest, never `latest` (ADR-0022).
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: pinned-images
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [apps]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [deployments, statefulsets, daemonsets]
+      - apiGroups: [batch]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [jobs, cronjobs]
+  variables:
+    - name: template
+      expression: "object.kind == 'CronJob' ? object.spec.jobTemplate.spec.template : object.spec.template"
+    - name: containers
+      expression: "variables.template.spec.containers + (has(variables.template.spec.initContainers) ? variables.template.spec.initContainers : [])"
+    - name: unpinned
+      expression: >-
+        variables.containers.filter(c, !(c.image.matches('@sha256:[a-f0-9]{64}$') || c.image.matches(':[^/:@]+$'))
+        || c.image.matches(':latest(@sha256:[a-f0-9]{64})?$')).map(c, c.image)
+  validations:
+    - expression: "size(variables.unpinned) == 0"
+      messageExpression: "'images without a pinned tag or digest (ADR-0022): ' + variables.unpinned.join(', ')"
+---
+# Warn + Audit first; strict policies switch to [Deny] in a follow-up PR after a week (ADR-0021 rule 4).
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: pinned-images
+spec:
+  policyName: pinned-images
+  validationActions: [Warn, Audit]
+  matchResources:
+    namespaceSelector: # exemptions: only namespaces whose objects upstream operators create (ADR-0031)
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: [kube-system, flux-system]

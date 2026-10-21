@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/validatingadmissionpolicy-admissionregistration-v1.json
+# No NodePort Services: nothing is exposed on node ports (ADR-0011).
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: no-nodeport
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [services]
+  validations:
+    - expression: "!has(object.spec.type) || object.spec.type != 'NodePort'"
+      messageExpression: "'NodePort Services are not allowed: use the public Gateway or a Tailscale Ingress (ADR-0011)'"
+---
+# Warn + Audit first; strict policies switch to [Deny] in a follow-up PR after a week (ADR-0021 rule 4).
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: no-nodeport
+spec:
+  policyName: no-nodeport
+  validationActions: [Warn, Audit]
+  matchResources:
+    namespaceSelector: # exemptions: only namespaces whose objects upstream operators create (ADR-0031)
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: [kube-system, flux-system]

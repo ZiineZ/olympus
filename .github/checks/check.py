@@ -13,6 +13,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import tomllib
 from pathlib import Path
 
@@ -258,6 +259,7 @@ def check_render(files):
         docs = yaml_docs(text)
         oci = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "OCIRepository"}
         repos = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "HelmRepository"}
+        gits = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "GitRepository"}
         for hr in [d for d in docs if d.get("kind") == "HelmRelease"]:
             name, spec = hr["metadata"]["name"], hr["spec"]
             if "chartRef" in spec and spec["chartRef"]["name"] in oci:  # OCI chart (preferred, ADR-0013)
@@ -266,8 +268,13 @@ def check_render(files):
             elif spec.get("chart", {}).get("spec", {}).get("sourceRef", {}).get("name") in repos:  # classic Helm repository
                 cs = spec["chart"]["spec"]
                 chart = [cs["chart"], "--repo", repos[cs["sourceRef"]["name"]]["spec"]["url"], "--version", cs["version"]]
+            elif spec.get("chart", {}).get("spec", {}).get("sourceRef", {}).get("name") in gits:  # chart inside a git tag
+                cs, git = spec["chart"]["spec"], gits[spec["chart"]["spec"]["sourceRef"]["name"]]["spec"]
+                checkout = tempfile.mkdtemp(prefix="olympus-chart-")
+                subprocess.run(["git", "-c", "advice.detachedHead=false", "clone", "-q", "--depth", "1", "--branch", git["ref"]["tag"], git["url"], checkout], check=True)
+                chart = [str(Path(checkout) / cs["chart"])]
             else:
-                errs.append(f"{path}: HelmRelease {name} has no OCIRepository/HelmRepository in the same folder")
+                errs.append(f"{path}: HelmRelease {name} has no OCI/Helm/Git repository source in the same folder")
                 continue
             ns = target_ns or hr["metadata"].get("namespace", "default")
             tpl = subprocess.run(["helm", "template", name, *chart, "--namespace", ns, "--kube-version", kube_version,

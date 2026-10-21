@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/validatingadmissionpolicy-admissionregistration-v1.json
+# Images are pinned by digest as well as tag (ADR-0022). Stays Warn + Audit.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: images-have-digest
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [apps]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [deployments, statefulsets, daemonsets]
+      - apiGroups: [batch]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [jobs, cronjobs]
+  variables:
+    - name: template
+      expression: "object.kind == 'CronJob' ? object.spec.jobTemplate.spec.template : object.spec.template"
+    - name: containers
+      expression: "variables.template.spec.containers + (has(variables.template.spec.initContainers) ? variables.template.spec.initContainers : [])"
+    - name: undigested
+      expression: "variables.containers.filter(c, !c.image.matches('@sha256:[a-f0-9]{64}$')).map(c, c.image)"
+  validations:
+    - expression: "size(variables.undigested) == 0"
+      messageExpression: "'images without an @sha256 digest (ADR-0022): ' + variables.undigested.join(', ')"
+---
+# Warn + Audit first; strict policies switch to [Deny] in a follow-up PR after a week (ADR-0021 rule 4).
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: images-have-digest
+spec:
+  policyName: images-have-digest
+  validationActions: [Warn, Audit]
+  matchResources:
+    namespaceSelector: # exemptions: only namespaces whose objects upstream operators create (ADR-0031)
+      matchExpressions:
+        - key: kubernetes.io/metadata.name
+          operator: NotIn
+          values: [kube-system, flux-system]

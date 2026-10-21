@@ -24,7 +24,6 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
   |---|---|---|---|
   | `olympus/tier` | label | nodes | `heavy`, `light` |
   | `olympus/gateway-access` | label | namespaces | `public` |
-  | `olympus/policy` | label | namespaces | `exempt` (only `kube-system`, `flux-system`) |
   | `olympus/description`, `olympus/docs`, `olympus/adr` | annotation | `ks.yaml` Kustomizations | text, paths, ADR numbers |
   | `olympus/backup` | annotation | namespaces | `none` plus a reason |
 
@@ -152,6 +151,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 - **Network:** every namespace includes `03-cluster/components/default-deny` (ingress). Egress is open, except for `athena`.
 - **Our own apps** use the bjw-s `app-template` chart. Third-party software uses its upstream chart when maintained, otherwise `app-template`.
 - **New Deny policies** run in Warn/Audit mode for one week before switching to Deny.
+- **Policy exemptions** are matched on the built-in label `kubernetes.io/metadata.name`. Only `kube-system` and `flux-system` are exempt, and they're listed in each binding ([ADR-0031](decisions/0031-storage-and-security-layer-corrections.md)).
 
 ## Upgrades ([ADR-0023](decisions/0023-upgrades-renovate-tuppr.md))
 
