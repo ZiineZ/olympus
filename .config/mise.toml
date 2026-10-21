@@ -39,6 +39,39 @@ run = "python3 .github/checks/check.py"
 description = "Repo + PR checks: sync rules, PR title. Needs BASE_REF, PR_TITLE, PR_BODY."
 run = "python3 .github/checks/check.py --pr"
 
+[tasks."secret:new"]
+description = "Create or replace an encrypted Secret: values are typed hidden (or read from a file), never written in plaintext (ADR-0014)."
+usage = '''
+arg "<file>" help="Target path in the repo, ending in .sops.yaml"
+arg "<namespace>" help="Namespace of the Secret"
+arg "<name>" help="Secret name: <component>-<purpose>"
+arg "<keys>" var=#true help="KEY to type hidden, or KEY=@path to read a file"
+'''
+shell = "bash -c"
+run = '''
+set -euo pipefail # bash 3.2 compatible (macOS)
+file="$usage_file"
+[[ "$file" == *.sops.yaml ]] || { echo "error: $file must end in .sops.yaml" >&2; exit 1; }
+doc=$(NAME="$usage_name" NS="$usage_namespace" yq -n \
+  '.apiVersion = "v1" | .kind = "Secret" | .type = "Opaque" | .metadata.name = strenv(NAME) | .metadata.namespace = strenv(NS)')
+eval "keys=($usage_keys)" # mise passes the list shell-quoted
+for key in "${keys[@]}"; do
+  if [[ "$key" == *=@* ]]; then
+    value=$(cat "${key#*=@}"); key="${key%%=@*}"
+  else
+    read -rsp "$key (hidden): " value </dev/tty; echo >&2
+  fi
+  [[ -n "$value" ]] || { echo "error: $key is empty" >&2; exit 1; }
+  # the value travels only through memory and an env var, never argv or disk
+  doc=$(printf '%s\n' "$doc" | K="$key" V="$value" yq '.stringData[strenv(K)] = strenv(V)') # a pipe, not <<< (bash 3.2 writes here-strings to a temp file)
+done
+mkdir -p "$(dirname "$file")"
+printf '%s\n' "$doc" | sops encrypt --filename-override "$file" --input-type yaml --output-type yaml /dev/stdin > "$file.tmp"
+mv "$file.tmp" "$file"
+unset value doc
+echo "encrypted $file for $(yq '.sops.age[0].recipient' "$file")"
+'''
+
 [tasks."github:apply"]
 description = "Apply .github/settings/ to the GitHub repo (Stan, admin token)."
 run = "python3 .github/settings/apply.py apply"

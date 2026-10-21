@@ -108,6 +108,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 - **Bootstrapped releases** (Cilium, flux-operator, flux-instance) must not use `${VAR}`s in their values, because helmfile reads them as-is.
 - **Charts** come from `OCIRepository`, pinned and verified with cosign wherever the publisher signs them. There is no image automation.
 - **Secrets:** every `Secret` lives in a `*.sops.yaml` file next to the component that uses it. Secret Helm values are passed through `valuesFrom`.
+- **Secrets are created and rotated only with `mise run secret:new <file> <namespace> <name> KEY…`.** It prompts for each value with hidden input (or reads `KEY=@file`), and pipes it straight into `sops`. Plaintext never touches disk, the command line or a chat. The `sops-encrypted` check rejects an unencrypted value, or a `Secret` outside a `*.sops.yaml` file.
 - **The age key** is kept in Stan's password manager and on paper. It never goes in the cluster, CI, or Athena. Its public key is the single recipient in `.sops.yaml`. Anyone can **encrypt** with it, Athena included; only Stan can **decrypt**.
 - **Bootstrap** reads versions and values from the same files Flux uses. It runs once per cluster build.
 
