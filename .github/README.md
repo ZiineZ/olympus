@@ -188,7 +188,7 @@ Machines and the agent are named after Greek gods; everything inside the cluster
 ```
 olympus/
 ├── 00-docs/            architecture · conventions · inventory (generated) · decisions/ · runbooks/
-├── 01-talos/           talconfig.yaml · patches/
+├── 01-talos/           cluster.yaml · patches/ · schematics/
 ├── 02-bootstrap/       helmfile (cilium → flux)
 ├── 03-cluster/         flux entrypoint · cluster-settings · priority classes · components/
 ├── 04-platform/        01-network · 02-storage · 03-security · 04-observability · 05-operations · 06-agent

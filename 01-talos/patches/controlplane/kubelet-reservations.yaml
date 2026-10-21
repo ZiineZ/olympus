@@ -1,0 +1,6 @@
+# Heavy-node reservations (ADR-0007). Calibration knob.
+apiVersion: v1alpha1
+kind: KubeletConfig
+config:
+  systemReserved: {cpu: 500m, memory: 1Gi}
+  kubeReserved: {cpu: 500m, memory: 1Gi}

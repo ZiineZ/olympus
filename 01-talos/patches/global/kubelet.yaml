@@ -1,0 +1,14 @@
+# Kubelet behaviour on every node (ADR-0007, ADR-0022). Reservations differ per role: see
+# patches/controlplane and patches/worker. Thresholds are calibration knobs, tuned by PR from data.
+apiVersion: v1alpha1
+kind: KubeletConfig
+config:
+  serializeImagePulls: false
+  evictionHard:
+    memory.available: 500Mi
+    nodefs.available: 10%
+    imagefs.available: 10%
+  evictionSoft:
+    memory.available: 1Gi
+  evictionSoftGracePeriod:
+    memory.available: 1m

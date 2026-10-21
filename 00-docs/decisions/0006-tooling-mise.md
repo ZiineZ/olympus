@@ -1,6 +1,6 @@
 # ADR-0006: Tooling: mise pins every CLI and owns all tasks
 
-- **Status:** Accepted
+- **Status:** Accepted (`talhelper` superseded by ADR-0028)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0003, ADR-0004, ADR-0015

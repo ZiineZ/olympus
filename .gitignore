@@ -10,3 +10,6 @@ talosconfig
 # Local noise
 .DS_Store
 __pycache__/
+
+# Rehearsal cluster state, talosconfig and kubeconfig (ADR-0025)
+.rehearsal/

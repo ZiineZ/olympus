@@ -1,0 +1,8 @@
+# Kernel parameters on every node (ADR-0007).
+apiVersion: v1alpha1
+kind: SysctlConfig
+params:
+  fs.inotify.max_user_instances: "8192"
+  fs.inotify.max_user_watches: "1048576"
+  net.core.rmem_max: "7500000" # cloudflared QUIC buffers
+  net.core.wmem_max: "7500000"

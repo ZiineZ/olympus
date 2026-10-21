@@ -1,6 +1,6 @@
 # ADR-0007: Operating system: Talos Linux on every node
 
-- **Status:** Accepted
+- **Status:** Accepted (rule 2's renderer superseded by ADR-0028)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0008, ADR-0009, ADR-0012, ADR-0023

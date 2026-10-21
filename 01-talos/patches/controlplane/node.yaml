@@ -1,0 +1,8 @@
+# Control planes are the heavy tier and also run workloads (ADR-0008).
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+labels:
+  olympus/tier: heavy
+taints:
+  node-role.kubernetes.io/control-plane:
+    $patch: delete # allow scheduling on the control plane
