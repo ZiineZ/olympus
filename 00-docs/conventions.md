@@ -104,7 +104,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 
 - **Uniform Flux settings** live once, in `03-cluster/flux-defaults.yaml`. They are applied to every component Kustomization (`wait`, timeouts, `cluster-settings` substitution) and every HelmRelease (drift detection, CRD handling, remediation) through the layers. Components never repeat them.
 - **Intervals:** each `ks.yaml` sets 10m and each HelmRelease 30m.
-- **SOPS decryption** is switched on once, at kustomize-controller.
+- **SOPS decryption** needs two things: the age key at kustomize-controller (`--sops-age-secret`), and `decryption: {provider: sops}` on every component Kustomization (set in `flux-defaults.yaml`) ([ADR-0030](decisions/0030-sops-decryption-opt-in.md)).
 - **Bootstrapped releases** (Cilium, flux-operator, flux-instance) must not use `${VAR}`s in their values, because helmfile reads them as-is.
 - **Charts** come from `OCIRepository`, pinned and verified with cosign wherever the publisher signs them. There is no image automation.
 - **Secrets:** every `Secret` lives in a `*.sops.yaml` file next to the component that uses it. Secret Helm values are passed through `valuesFrom`.

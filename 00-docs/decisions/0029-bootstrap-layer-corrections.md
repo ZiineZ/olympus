@@ -1,6 +1,6 @@
 # ADR-0029: Corrections from building the bootstrap layer
 
-- **Status:** Accepted
+- **Status:** Accepted (rule 3 superseded by ADR-0030)
 - **Date:** 2026-10-21
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0003 (supersedes the `values.yaml` file in its component shape), ADR-0013 (supersedes rules 3–4's mechanism), ADR-0022 (supersedes Flux's PriorityClass), ADR-0025 (rule 6: `values.yaml` → `helmrelease.yaml`)

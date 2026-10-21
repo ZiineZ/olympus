@@ -20,6 +20,8 @@ spec:
           timeout: 5m
           wait: true
           deletionPolicy: WaitForTermination
+          decryption: # opt in to SOPS: the controller only holds the key (--sops-age-secret), ADR-0030
+            provider: sops
           postBuild:
             substituteFrom:
               - kind: ConfigMap
