@@ -21,7 +21,8 @@ Writing the first storage component and the admission policies against the real 
    - A git-hosted chart is the third allowed chart source, after OCI and classic Helm repositories (ADR-0013 rule 5).
    - The `render` check templates it from a shallow clone at that tag.
 3. **`pvc-explicit-storage-class` is a CI rule, not an admission policy.** The `DefaultStorageClass` admission plugin fills in `storageClassName` *before* validating policies run, so the policy could never fire (proven in the rehearsal). The `render` check now rejects any PVC or StatefulSet `volumeClaimTemplate` in git without an explicit `storageClassName`. This supersedes that row of ADR-0021's policy table.
-4. **The node that provides volumes is the `${STORAGE_NODE}` variable** (`zeus`) in `cluster-settings.yaml`. The rehearsal sets it to its own node name inside its allowed three-file diff (ADR-0025).
+4. **The rehearsal's user volume is a Docker-only stand-in.** `01-talos/patches/rehearsal/` holds a `UserVolumeConfig` of type `directory`, which Talos 1.14 supports. Only `mise run rehearsal:up` applies it. zeus gets the partition-backed volume of the same name in phase 2. This extends ADR-0028's "the folder is the list" with one folder that never reaches real nodes.
+5. **The node that provides volumes is the `${STORAGE_NODE}` variable** (`zeus`) in `cluster-settings.yaml`. The rehearsal sets it to its own node name inside its allowed three-file diff (ADR-0025).
 
 ## Consequences
 
