@@ -37,7 +37,8 @@
     "github_owned_allowed": true,
     "verified_allowed": false,
     "patterns_allowed": [
-      "jdx/mise-action@*"
+      "jdx/mise-action@*",
+      "tailscale/gitops-acl-action@*"
     ]
   },
   "workflow_permissions": {

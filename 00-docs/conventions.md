@@ -97,7 +97,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 - **Admin UIs** are reachable only on the tailnet, through an `Ingress` with `ingressClassName: tailscale`. That is the only allowed use of `Ingress`.
 - **Never used:** NodePort, `hostNetwork` for apps, port forwarding, or LAN-only hostnames.
 - **Humans are read-only by default.** The `olympus:viewers` group sees everything except Secrets. Write access goes through `runbooks/break-glass.md`.
-- **The tailnet policy is code:** `04-platform/01-network/tailscale/tailnet-policy.hujson`.
+- **The tailnet policy is code:** `04-platform/01-network/tailscale/app/tailnet-policy.hujson`. It is tested on every PR and applied on merge by `.github/workflows/tailnet-policy.yaml`; never edit it in the admin console. Your devices reach everything. Tagged cluster devices (`tag:k8s`, `tag:k8s-operator`, `tag:olympus-node`) can be reached but never initiate connections. Policy `tests` enforce both.
 - **The one out-of-git exception:** Cloudflare Access apps and policies, which are documented in `runbooks/03-core.md`.
 
 ## GitOps and secrets ([ADR-0013](decisions/0013-gitops-flux.md), [ADR-0014](decisions/0014-secrets-sops-age.md), [ADR-0015](decisions/0015-bootstrap-sequence.md))

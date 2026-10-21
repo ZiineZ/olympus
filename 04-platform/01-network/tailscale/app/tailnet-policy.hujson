@@ -1,0 +1,50 @@
+// Tailnet policy for Stan's tailnet, managed as code (ADR-0012).
+// .github/workflows/tailnet-policy.yaml tests it on every PR and applies it on merge to main.
+// Edit only here: changes made in the Tailscale admin console are overwritten on the next apply.
+{
+	// Tags used by Olympus. Empty owner lists mean only admins (and OAuth clients holding
+	// the tag) can assign them; tag:k8s is assigned by the operator to the proxies it creates.
+	"tagOwners": {
+		"tag:k8s-operator": [],
+		"tag:k8s":          ["tag:k8s-operator"],
+		"tag:olympus-node": [],
+	},
+
+	"grants": [
+		// Stan's own devices reach everything, exactly as with the old allow-all default.
+		{"src": ["autogroup:member"], "dst": ["*"], "ip": ["*"]},
+
+		// kubectl through the operator's API server proxy: the tailnet identity is mapped to the
+		// read-only group olympus:viewers. Write access exists only via break-glass (ADR-0012).
+		{
+			"src": ["autogroup:member"],
+			"dst": ["tag:k8s-operator"],
+			"app": {"tailscale.com/cap/kubernetes": [{"impersonate": {"groups": ["olympus:viewers"]}}]},
+		},
+
+		// Tagged devices (cluster proxies, zeus) get no grant as a source: they can be reached,
+		// but cannot open connections to anything, including Stan's laptop and phone.
+	],
+
+	// Tailscale SSH into your own devices, in check mode (unchanged default).
+	"ssh": [
+		{
+			"action": "check",
+			"src":    ["autogroup:member"],
+			"dst":    ["autogroup:self"],
+			"users":  ["autogroup:nonroot", "root"],
+		},
+	],
+
+	// Funnel for your own devices (unchanged default).
+	"nodeAttrs": [
+		{"target": ["autogroup:member"], "attr": ["funnel"]},
+	],
+
+	// Tailscale refuses to save a policy whose tests fail.
+	"tests": [
+		{"src": "ZiineZ@github", "accept": ["tag:k8s:443", "tag:k8s-operator:443", "tag:olympus-node:50000"]},
+		{"src": "tag:k8s", "deny": ["tag:k8s-operator:443", "tag:olympus-node:50000"]},
+		{"src": "tag:olympus-node", "deny": ["tag:k8s:443"]},
+	],
+}
