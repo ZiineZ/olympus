@@ -45,3 +45,7 @@ Sysctls that a container can't set show up as warnings here. They are expected t
 ## Results
 
 Each run appends one line: date, layer, outcome, findings.
+
+| Date | Layer | Outcome | Findings |
+|---|---|---|---|
+| 2026-10-21 | Talos | ✅ after one fix | The PodSecurity exemption duplicated Talos's default `kube-system` entry (patches append to lists), and kube-apiserver exited. Fixed by dropping our exemption. Then verified: flannel and kube-proxy absent; Pod Security `restricted` rejects a privileged pod; sysctls applied; allocatable = capacity − 2 GiB − 500 Mi and 7/8 CPU; `olympus/tier=heavy`; no control-plane taint; node NotReady as expected without a CNI. |
