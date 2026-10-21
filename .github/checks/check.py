@@ -27,7 +27,8 @@ PR_TITLE_RE = re.compile(r"^(feat|fix|chore|docs|refactor|ci|revert)(\([a-z0-9./
 # A version string, but not part of a dotted quad (IPs, CIDRs).
 VERSION_RE = re.compile(r"(?<![\d.])v?\d+\.\d+\.\d+(?![\d.])")
 # Content fetched from a moving branch can change without any change in git (ADR-0033).
-FLOATING_REF_RE = re.compile(r"(?:raw\.githubusercontent\.com/[^/\s]+/[^/\s]+|github\.com/[^/\s]+/[^/\s]+/(?:raw|blob))/(?:main|master|HEAD)/")
+# Only fetchable content counts: raw files. github.com/.../blob/... links in CRD docs are web pages.
+FLOATING_REF_RE = re.compile(r"(?:raw\.githubusercontent\.com/[^/\s]+/[^/\s]+|github\.com/[^/\s]+/[^/\s]+/raw)/(?:main|master|HEAD)/")
 ESCAPE_RE = re.compile(r"^No doc change:\s*`?([^`\s]+)`?\s+(?:—|--|-)\s+\S", re.M)
 
 
@@ -373,6 +374,7 @@ def selftest():
     assert FLOATING_REF_RE.search("https://raw.githubusercontent.com/a/b/main/x.yaml")
     assert FLOATING_REF_RE.search("https://raw.githubusercontent.com/a/b/master/x.json")
     assert not FLOATING_REF_RE.search("https://raw.githubusercontent.com/a/b/v1.2.3/x.yaml")
+    assert not FLOATING_REF_RE.search("see https://github.com/grpc/grpc/blob/master/doc/health.md")
     assert not FLOATING_REF_RE.search("https://raw.githubusercontent.com/a/b/6599fbd7ce10924377a7b1d113281c7ae7c03043/x.json")
     assert PR_TITLE_RE.match("feat(kite)!: add tailnet ingress") and PR_TITLE_RE.match("chore(deps): update x")
     assert not PR_TITLE_RE.match("Add stuff")
