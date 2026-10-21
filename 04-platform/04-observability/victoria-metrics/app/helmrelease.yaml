@@ -157,12 +157,28 @@ spec:
         etcd: {url: https://raw.githubusercontent.com/monitoring-mixins/website/7b1f6de899ffdbdf59c807a32cd8a9a514231915/assets/etcd/dashboards/etcd.json}
         kube-prometheus: {url: https://raw.githubusercontent.com/prometheus-operator/kube-prometheus/v0.19.0/manifests/grafana-dashboardDefinitions.yaml}
     # Talos specifics (ADR-0007 controlplane/metrics.yaml opens these endpoints)
+    # Talos serves these with self-signed certs valid only for localhost, so verification is skipped;
+    # the scrape still authenticates with the ServiceAccount token (found in the rehearsal, ADR-0033).
     kubeControllerManager:
       service:
         selector: {k8s-app: kube-controller-manager}
+      vmScrape:
+        spec:
+          endpoints:
+            - port: http-metrics
+              scheme: https
+              bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+              tlsConfig: {insecureSkipVerify: true}
     kubeScheduler:
       service:
         selector: {k8s-app: kube-scheduler}
+      vmScrape:
+        spec:
+          endpoints:
+            - port: http-metrics
+              scheme: https
+              bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+              tlsConfig: {insecureSkipVerify: true}
     kubeEtcd: # etcd is a Talos service, not a pod: scrape the control plane's plain-HTTP metrics port
       endpoints: ["${CONTROL_PLANE_IP}"]
       service:
