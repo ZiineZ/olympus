@@ -47,6 +47,12 @@ Separately, **Talos 1.14 moved most settings into dedicated config documents**: 
 
 - **Keep talhelper:** archived, and it already lags Talos. Rejected.
 - **A fork of talhelper:** we would become its maintainers. Rejected.
+- **talm** (cozystack/talm, "Helm for Talos"): maintained (Cozystack/Ænix, already on Talos 1.14) and it can discover hardware from live nodes. Rejected for now, for three reasons:
+  - it puts a templated chart, with vendored preset and library charts that must be re-synced on every talm upgrade, between us and the plain Talos documents
+  - it brings its own encryption (`talm.key`, `*.encrypted` files) next to SOPS, which ADR-0014 allows one of
+  - it is a smaller third-party project on the upgrade path, the risk talhelper just demonstrated
+
+  **Reconsider when** at least 3 workers with different hardware are running and the per-node patches grow beyond a few lines each (Stan, 2026-10-21).
 - **A templating engine (makejinja, minijinja) like home-ops:** one more tool for what `yq` and patch folders already cover. Rejected for now.
 - **Omni:** SaaS dependency (ADR-0007). Rejected.
 
