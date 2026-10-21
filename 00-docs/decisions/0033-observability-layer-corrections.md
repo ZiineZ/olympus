@@ -29,7 +29,11 @@ Building metrics, alerting and Kite against the real charts settled several "ver
    - Every source is now pinned to a release tag (kube-prometheus, VictoriaMetrics, its operator, VictoriaLogs/Traces, dotdc) or to a commit (rfmoz, monitoring-mixins, which publish no releases). That includes disabled sources.
    - The `render` check now rejects any raw-GitHub URL on `main`, `master` or `HEAD`, anywhere in rendered output.
 8. **Grafana's admin account:** the chart generates a random admin password into a Helm-managed Secret. It is break-glass only; viewers are anonymous on the tailnet. ADR-0018 rule 3 had planned a SOPS-stored password; a generated one does the same job with nothing to rotate in git.
-9. **Per-component monitoring** (ServiceMonitors and dashboards for Cilium, Flux, k8up, Tailscale and cloudflared, plus Olympus alert rules) is a separate PR. Those monitors live in each component's folder and need the stack's CRDs first.
+9. **Chart-internal images of the VictoriaMetrics stack are pinned by tag (by the chart), not by digest.**
+   - `images-have-digest` warns about them. That policy is warn-only by design (ADR-0021).
+   - Digests for images inside third-party charts arrive with Renovate's digest pinning (phase 6, ADR-0023).
+   - The operator-injected `config-reloader`/`config-init` containers get explicit resources (`configReloaderResources`), so they pass the strict policies.
+10. **Per-component monitoring** (ServiceMonitors and dashboards for Cilium, Flux, k8up, Tailscale and cloudflared, plus Olympus alert rules) is a separate PR. Those monitors live in each component's folder and need the stack's CRDs first.
 
 ## Consequences
 

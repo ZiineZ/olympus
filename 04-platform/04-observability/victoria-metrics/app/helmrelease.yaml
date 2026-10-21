@@ -35,15 +35,18 @@ spec:
     vmagent:
       spec:
         scrapeInterval: 30s
+        configReloaderResources: {requests: {cpu: 10m, memory: 32Mi}, limits: {memory: 32Mi}} # operator-injected sidecar + init (ADR-0022)
         priorityClassName: platform
         resources: {requests: {cpu: 50m, memory: 256Mi}, limits: {memory: 256Mi}}
     vmalert:
       spec:
         priorityClassName: platform
+        configReloaderResources: {requests: {cpu: 10m, memory: 32Mi}, limits: {memory: 32Mi}} # operator-injected sidecar + init (ADR-0022)
         resources: {requests: {cpu: 20m, memory: 128Mi}, limits: {memory: 128Mi}}
     alertmanager:
       spec:
         priorityClassName: platform
+        configReloaderResources: {requests: {cpu: 10m, memory: 32Mi}, limits: {memory: 32Mi}} # operator-injected sidecar + init (ADR-0022)
         secrets: [alertmanager-receivers] # mounted at /etc/vm/secrets/alertmanager-receivers/<key>
         resources: {requests: {cpu: 10m, memory: 64Mi}, limits: {memory: 64Mi}}
       config: # ADR-0019. URLs come from files, so the topic and ping URL never appear in config.
