@@ -121,9 +121,10 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 - **Restores** are a PR that adds a `Restore` CR. A follow-up PR removes it ([runbooks/restore.md](runbooks/restore.md)).
 - **Backup pods run as UID 1000** with the restricted profile (`components/backup/podconfig.yaml`). An app that writes as another UID patches the PodConfig in its own folder.
 
-## Observability ([ADR-0018](decisions/0018-observability-victoriametrics.md), [ADR-0019](decisions/0019-alerting-ntfy.md), [ADR-0020](decisions/0020-dashboard-kite.md))
+## Observability ([ADR-0018](decisions/0018-observability-victoriametrics.md), [ADR-0019](decisions/0019-alerting-ntfy.md), [ADR-0020](decisions/0020-dashboard-kite.md), [ADR-0034](decisions/0034-per-component-monitoring.md))
 
 - **Metrics:** the VictoriaMetrics stack. Alert rules and dashboards live in the folder of the component they watch.
+- **Monitoring objects** (`VMPodScrape`, `VMServiceScrape`, `VMRule`) live in `<component>/app/monitoring/`. A second Kustomization, `<component>-monitoring`, applies them and depends on `victoria-metrics`: the one allowed dependency on a higher layer. Charts' own `serviceMonitor`/`prometheusRule` switches stay off; there are no Prometheus Operator CRDs ([ADR-0034](decisions/0034-per-component-monitoring.md)).
 - **Grafana dashboards** come from git only, with `editable: false`.
 - **Alerts** go to ntfy via its built-in Alertmanager template, and are outbound only. `Watchdog` pings healthchecks.io, the dead man's switch. All three URLs live in the `alertmanager-receivers` Secret ([ADR-0033](decisions/0033-observability-layer-corrections.md)).
 - **Every remotely fetched rule and dashboard is pinned** to a tag or commit. The `render` check rejects floating `main`/`master` refs.

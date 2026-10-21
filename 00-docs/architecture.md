@@ -111,8 +111,9 @@ Not offered: LAN-only hostnames, NodePorts, `hostNetwork` apps ([ADR-0011](decis
 ## 7. Observability
 
 - **Metrics:** VictoriaMetrics k8s stack (VMSingle, VMAgent, VMAlert, Alertmanager) plus node-exporter, kube-state-metrics, and metrics-server.
-- **Dashboards:** Grafana, read-only, provisioned from git. Hubble UI shows live flows. The Flux Web UI shows reconcile state. Kite gives the all-in-one view: resources, logs, metrics, and AI Q&A.
+- **Dashboards:** Grafana, read-only, provisioned from git. Hubble UI shows live flows. The Flux Web UI shows reconcile state. Kite gives the all-in-one view: resources, logs and metrics. Its AI is off; Athena is the cluster's AI.
 - **Alerts:** VMAlert → Alertmanager → ntfy (critical is urgent and repeats hourly; warning is default). A `Watchdog` heartbeat pings healthchecks.io, which raises its own alert if the cluster goes silent.
+- **What Olympus watches beyond the upstream rule sets:** Flux not applying git, backups stale or failing, the Cloudflare Tunnel down, Cilium map pressure, and node memory pressure (PSI). Each component's scrapes and rules live in its own `app/monitoring/`. k8up's backup pods push their results straight into VictoriaMetrics.
 - **On the tailnet:** `grafana`, `kite`, `alertmanager` and `vmui` join `hubble` and `flux` (`runbooks/04-observability.md`).
 - **Logs:** streamed live through Kite and kubectl. No log store yet ([ADR-0026](decisions/0026-deferred-decisions-register.md)).
 

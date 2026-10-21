@@ -66,8 +66,9 @@ Copy the **most similar existing component** and adapt it, so the repo itself is
 - [ ] Ingress allows in the namespace's network policies, for whichever path above applies.
 
 **Observability**
-- [ ] A ServiceMonitor or PodMonitor, if it exposes metrics (enable it in the chart values).
-- [ ] Alert rules (a VMRule) in `app/` for its failure modes.
+- [ ] If it exposes metrics: a `VMPodScrape` (or `VMServiceScrape`) in `app/monitoring/`. Leave the chart's `serviceMonitor` switch off (ADR-0034).
+- [ ] Alert rules (a `VMRule`) in `app/monitoring/` for its failure modes.
+- [ ] A second Kustomization `<name>-monitoring` in `ks.yaml` for that folder, with `dependsOn` the component and `victoria-metrics`.
 - [ ] A dashboard ConfigMap with `grafana_dashboard: "1"`, or a grafana.com `gnetId` + `revision`.
 
 **Secrets**
