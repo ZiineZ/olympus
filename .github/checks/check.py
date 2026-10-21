@@ -273,6 +273,26 @@ def check_render(files):
     return errs
 
 
+def check_sops_encrypted(files):
+    """ADR-0014: every *.sops.yaml is encrypted; no plaintext Secret lives anywhere else."""
+    errs = []
+    for f in [f for f in files if f.endswith(".sops.yaml") and Path(f).name != ".sops.yaml"]:  # not the sops config
+        text = (ROOT / f).read_text()
+        if not re.search(r"^sops:", text, re.M) or "mac: ENC[" not in text:
+            errs.append(f"{f}: not SOPS-encrypted (no sops metadata/mac)")
+            continue
+        if not f.startswith("01-talos/"):
+            for doc in yaml_docs(text):
+                for field in ("data", "stringData"):
+                    plain = [k for k, v in (doc.get(field) or {}).items() if not str(v).startswith("ENC[")]
+                    if plain:
+                        errs.append(f"{f}: {field} keys {plain} are not encrypted")
+    for f in [f for f in files if f.endswith((".yaml", ".yml")) and not f.endswith(".sops.yaml")]:
+        if re.search(r"^kind:\s*Secret\s*$", (ROOT / f).read_text(), re.M):
+            errs.append(f"{f}: a Secret must live in a *.sops.yaml file (ADR-0014)")
+    return errs
+
+
 # --- PR checks ---------------------------------------------------------------------------
 
 def changed_files(base):
@@ -342,6 +362,7 @@ def main():
         "orphans": check_orphans(files),
         "bootstrap-literals": check_bootstrap_literals(files),
         "render": check_render(files),
+        "sops-encrypted": check_sops_encrypted(files),
     }
     if "--pr" in sys.argv:
         results["sync-rules"] = check_sync_rules(changed_files(os.environ["BASE_REF"]), os.environ.get("PR_BODY", ""))
