@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-10-21
 - **Deciders:** Stan (owner), Claude (proposer)
-- **Related:** ADR-0002 (supersedes the `olympus/policy` label), ADR-0016, ADR-0021 (supersedes rule 3's exemption mechanism)
+- **Related:** ADR-0002 (supersedes the `olympus/policy` label), ADR-0016, ADR-0021 (supersedes rule 3's exemption mechanism and the `pvc-explicit-storage-class` row)
 
 ## Context
 
@@ -20,7 +20,8 @@ Writing the first storage component and the admission policies against the real 
 2. **local-path-provisioner is installed by a HelmRelease from a `GitRepository` source,** pinned to the project's release tag, using the chart folder inside it.
    - A git-hosted chart is the third allowed chart source, after OCI and classic Helm repositories (ADR-0013 rule 5).
    - The `render` check templates it from a shallow clone at that tag.
-3. **The node that provides volumes is the `${STORAGE_NODE}` variable** (`zeus`) in `cluster-settings.yaml`. The rehearsal sets it to its own node name inside its allowed three-file diff (ADR-0025).
+3. **`pvc-explicit-storage-class` is a CI rule, not an admission policy.** The `DefaultStorageClass` admission plugin fills in `storageClassName` *before* validating policies run, so the policy could never fire (proven in the rehearsal). The `render` check now rejects any PVC or StatefulSet `volumeClaimTemplate` in git without an explicit `storageClassName`. This supersedes that row of ADR-0021's policy table.
+4. **The node that provides volumes is the `${STORAGE_NODE}` variable** (`zeus`) in `cluster-settings.yaml`. The rehearsal sets it to its own node name inside its allowed three-file diff (ADR-0025).
 
 ## Consequences
 

@@ -1,6 +1,6 @@
 # ADR-0021: Admission policy: built-in Pod Security and ValidatingAdmissionPolicy, no Kyverno
 
-- **Status:** Accepted (rule 3's exemption label superseded by ADR-0031)
+- **Status:** Accepted (rule 3's exemption label and the `pvc-explicit-storage-class` row superseded by ADR-0031)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0011, ADR-0016, ADR-0022

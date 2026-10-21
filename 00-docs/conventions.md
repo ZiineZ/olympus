@@ -80,7 +80,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 ## Nodes ([ADR-0007](decisions/0007-operating-system-talos-linux.md), [ADR-0008](decisions/0008-cluster-topology-and-versions.md), [ADR-0009](decisions/0009-network-addressing-and-hardware.md))
 
 - **Talos only.** Configuration is applied only through mise tasks. There is no SSH and no hand-made patches.
-- **Talos config is rendered by `talosctl` alone** ([ADR-0028](decisions/0028-talos-config-with-talosctl.md)). `01-talos/cluster.yaml` holds versions and nodes. Patches apply by folder: `patches/global` to every node, `patches/<role>` to that role. Each image is defined in `schematics/<name>.yaml`.
+- **Talos config is rendered by `talosctl` alone** ([ADR-0028](decisions/0028-talos-config-with-talosctl.md)). `01-talos/cluster.yaml` holds versions and nodes. Patches apply by folder: `patches/global` to every node, `patches/<role>` to that role. `patches/rehearsal/` holds Docker-only stand-ins, such as a directory user volume, applied **only** by `mise run rehearsal:up`. Each image is defined in `schematics/<name>.yaml`.
 - **Patches use only Talos 1.14 config documents**, never the deprecated `v1alpha1` fields. Cluster-scoped documents belong in `patches/controlplane/`.
 - **Talos patches append to lists; they don't replace them.** Never restate a list entry Talos already sets by default: a duplicate can stop a component from starting. Remove an entry with `$patch: delete`.
 - **Image schematics:** `zeus`, `amd`, `intel`. Every node has wired Ethernet.
@@ -113,7 +113,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 
 ## Data ([ADR-0016](decisions/0016-storage-local-path.md), [ADR-0017](decisions/0017-backups-k8up.md))
 
-- **Storage:** StorageClass `local-path` only, set explicitly on every PVC. It is backed by zeus only, with `Retain`.
+- **Storage:** StorageClass `local-path` only, set explicitly on every PVC. The CI `render` check enforces this, because the cluster fills in its default before admission policies can see it. It is backed by zeus only, with `Retain`.
 - **Placement:** stateful workloads use `nodeSelector: {olympus/tier: heavy}`.
 - **Backups:** every namespace with PVCs includes `03-cluster/components/backup` (k8up, daily), or is annotated `olympus/backup: none` with a reason.
 - **Restores** are a PR that adds a `Restore` CR. A follow-up PR removes it.

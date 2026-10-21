@@ -1,0 +1,7 @@
+# REHEARSAL ONLY (applied by `mise run rehearsal:up`, never to real nodes).
+# Docker-based Talos has no disk to partition, so the local-path user volume is a plain directory.
+# zeus gets a real partition-backed UserVolumeConfig of the same name in phase 2 (ADR-0007, ADR-0016).
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: local-path
+volumeType: directory

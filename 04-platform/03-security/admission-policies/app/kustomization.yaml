@@ -8,6 +8,5 @@ resources:
   - pinned-images.yaml
   - images-have-digest.yaml
   - require-app-name-label.yaml
-  - pvc-explicit-storage-class.yaml
   - no-nodeport.yaml
   - ingress-tailscale-only.yaml

@@ -6,6 +6,8 @@ metadata:
 spec:
   statefulSet:
     pod:
+      labels:
+        app.kubernetes.io/name: tailscale-proxy
       priorityClassName: platform
       tailscaleContainer:
         resources: {requests: {cpu: 10m, memory: 64Mi}, limits: {memory: 64Mi}}

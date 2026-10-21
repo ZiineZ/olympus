@@ -257,6 +257,13 @@ def check_render(files):
         if check.returncode:
             errs += [f"{path}: {l}" for l in check.stdout.splitlines() if "is invalid" in l or "failed" in l.lower()][:10]
         docs = yaml_docs(text)
+        # ADR-0031: the default-StorageClass admission plugin fills this in before any policy runs,
+        # so explicitness can only be enforced here, in git.
+        for d in docs:
+            claims = [d] if d.get("kind") == "PersistentVolumeClaim" else (
+                d.get("spec", {}).get("volumeClaimTemplates", []) if d.get("kind") == "StatefulSet" else [])
+            errs += [f"{path}: PVC {c.get('metadata', {}).get('name')} must set spec.storageClassName (ADR-0016)"
+                     for c in claims if not c.get("spec", {}).get("storageClassName")]
         oci = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "OCIRepository"}
         repos = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "HelmRepository"}
         gits = {d["metadata"]["name"]: d for d in docs if d.get("kind") == "GitRepository"}
