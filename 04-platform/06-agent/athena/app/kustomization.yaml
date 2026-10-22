@@ -5,7 +5,6 @@ resources:
   - namespace.yaml
   - ocirepository.yaml
   - helmrelease.yaml
-  - athena-claude.sops.yaml
   - athena-github-app.sops.yaml
   - rbac.yaml
   - networkpolicy.yaml

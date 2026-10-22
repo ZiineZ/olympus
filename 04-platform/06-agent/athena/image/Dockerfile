@@ -32,7 +32,9 @@ ENV PATH=/usr/local/bin:/opt/tools/bin:/usr/bin:/bin \
     HOME=/home/athena \
     MISE_TRUSTED_CONFIG_PATHS=/home/athena/olympus \
     DISABLE_AUTOUPDATER=1 \
-    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+    DISABLE_TELEMETRY=1 \
+    DISABLE_ERROR_REPORTING=1
+# Not CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: it turns Remote Control off (ADR-0036)
 USER 1000
 WORKDIR /home/athena
 CMD ["athena-init"]

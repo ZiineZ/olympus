@@ -36,9 +36,8 @@ spec:
               ANTHROPIC_MODEL: claude-opus-5-5
               ATHENA_REPO: ZiineZ/olympus
               ATHENA_GITHUB_APP_ID: "5423524" # not secret: the private key is what grants access
-              CLAUDE_CODE_OAUTH_TOKEN:
-                valueFrom:
-                  secretKeyRef: {name: athena-claude, key: CLAUDE_CODE_OAUTH_TOKEN}
+              # No Claude token here: Remote Control needs a full claude.ai login, made once with athena-setup
+              # and kept on the athena-home volume (ADR-0036)
             # A runaway session is OOMKilled inside this limit instead of starving the node (ADR-0024 rule 2)
             resources: {requests: {cpu: 500m, memory: 2Gi}, limits: {memory: 2Gi}}
             securityContext:

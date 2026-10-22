@@ -68,4 +68,4 @@ These steps come later. They are listed here so nothing gets forgotten.
   - a Cloudflare R2 bucket `olympus-backups` and its token (ADR-0017)
   - a Tailscale OAuth client (ADR-0012)
   - a healthchecks.io check (ADR-0019)
-  - a Claude subscription token for Athena, from `claude setup-token` (ADR-0024; Kite's AI is off, ADR-0033)
+  - a claude.ai subscription for Athena, signed in once inside its pod with `athena-setup` (ADR-0036; Kite's AI is off, ADR-0033)

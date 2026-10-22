@@ -23,6 +23,7 @@ spec:
         - ports: [{port: "6443", protocol: TCP}]
     - toFQDNs:
         - matchName: api.anthropic.com
+        - matchName: platform.claude.com # login token refresh (ADR-0036)
         - matchName: github.com
         - matchName: api.github.com
         - matchName: codeload.github.com

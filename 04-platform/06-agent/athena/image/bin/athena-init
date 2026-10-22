@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
-# Pod start: make sure the repo clone exists in the PVC home, then idle. Stan attaches with
-# `kubectl exec -it -n athena deploy/athena -- claude` (ADR-0024 rule 5).
-set -euo pipefail
+# Pod start: make sure the repo clone exists, then serve Remote Control from ~/olympus, so Athena's
+# sessions appear in the Claude apps and at claude.ai/code (ADR-0036). Until Stan has signed in once
+# with `athena-setup` (runbook 06), it only waits.
+set -uo pipefail
 [[ -d ~/olympus/.git ]] || git clone --quiet "https://github.com/$ATHENA_REPO.git" ~/olympus
-trap 'exit 0' TERM
-sleep infinity & wait
+cd ~/olympus
+trap 'kill "${child:-0}" 2>/dev/null; exit 0' TERM
+while true; do
+  if [[ -f ~/.claude/athena-setup-done ]]; then
+    claude remote-control --name athena --capacity 4 </dev/null & child=$!
+    wait "$child"
+  fi
+  sleep 10 & wait $!
+done
