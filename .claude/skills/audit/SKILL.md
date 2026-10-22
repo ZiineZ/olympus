@@ -22,6 +22,7 @@ description: Periodic read-only review of the Olympus cluster and repo covering 
 - Proposed ADRs (`grep -l 'Status:\*\* Proposed' 00-docs/decisions/*.md`) still waiting on Stan.
 - Living docs vs reality: every component in `04-platform/` and `05-apps/` appears in `architecture.md`, and nothing in `architecture.md` has disappeared from the repo.
 - `.claude/skills/*` and `.claude/CLAUDE.md`: every path they reference exists, and nothing contradicts `conventions.md`.
+- Every `<component>-monitoring` Kustomization depends on `victoria-metrics`. In VMAlert, every rule's health is `ok`; in VMAgent, every target is `up` (ADR-0034).
 
 ## 3. Security posture
 

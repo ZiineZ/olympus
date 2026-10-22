@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/operator.victoriametrics.com/vmrule_v1beta1.json
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: cloudflared
+spec:
+  groups:
+    - name: cloudflared
+      rules:
+        - alert: CloudflaredTunnelDown
+          expr: (max(cloudflared_tunnel_ha_connections) or vector(0)) < 1 # also fires when cloudflared isn't running at all
+          for: 5m
+          labels: {severity: critical}
+          annotations:
+            summary: The Cloudflare Tunnel has no connection to Cloudflare, so every public site is down
+            description: Check the cloudflared pod's logs, and that the tunnel credentials in `cloudflared-tunnel` are still valid.

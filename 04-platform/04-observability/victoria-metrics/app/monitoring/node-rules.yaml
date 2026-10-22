@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/operator.victoriametrics.com/vmrule_v1beta1.json
+# PSI (pressure stall information): the share of time tasks wait for memory. It catches a node that is up
+# but too starved to answer, before anything is OOMKilled. Thresholds are calibration knobs.
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: node-memory-pressure
+spec:
+  groups:
+    - name: node-memory-pressure
+      rules:
+        - alert: NodeMemoryPressure
+          expr: rate(node_pressure_memory_waiting_seconds_total[5m]) > 0.1
+          for: 10m
+          labels: {severity: warning}
+          annotations:
+            summary: Tasks on {{ $labels.instance }} wait for memory {{ $value | humanizePercentage }} of the time
+            description: The node is short on memory. `kubectl top pods -A --sort-by=memory` shows the biggest users.
+        - alert: NodeMemoryStall
+          expr: rate(node_pressure_memory_stalled_seconds_total[2m]) > 0.2
+          for: 2m
+          labels: {severity: critical}
+          annotations:
+            summary: "{{ $labels.instance }} is fully stalled on memory {{ $value | humanizePercentage }} of the time"
+            description: Every running task is blocked on memory, so the node is alive but barely responds. Find and stop the biggest memory user.

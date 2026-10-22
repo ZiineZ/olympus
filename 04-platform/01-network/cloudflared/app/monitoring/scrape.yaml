@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/operator.victoriametrics.com/vmpodscrape_v1beta1.json
+# cloudflared serves metrics on its readiness port (config.yaml: metrics: 0.0.0.0:2000).
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMPodScrape
+metadata:
+  name: cloudflared
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloudflared
+  podMetricsEndpoints:
+    - portNumber: 2000

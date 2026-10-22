@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/operator.victoriametrics.com/vmrule_v1beta1.json
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: cilium
+spec:
+  groups:
+    - name: cilium
+      rules:
+        - alert: CiliumBpfMapPressure
+          expr: max by (instance, map_name) (cilium_bpf_map_pressure) > 0.9
+          for: 10m
+          labels: {severity: warning}
+          annotations:
+            summary: Cilium BPF map {{ $labels.map_name }} on {{ $labels.instance }} is {{ $value | humanizePercentage }} full
+            description: A full BPF map makes new connections or endpoints fail. Raise its size under `bpf` in Cilium's values.
+        - alert: CiliumUnreachableNodes
+          expr: max by (instance) (cilium_unreachable_nodes) > 0
+          for: 10m
+          labels: {severity: warning}
+          annotations:
+            summary: Cilium on {{ $labels.instance }} cannot reach {{ $value }} other node(s)
+            description: Pods on those nodes cannot talk to each other. Check the node's network link and `cilium status`.

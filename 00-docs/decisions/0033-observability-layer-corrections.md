@@ -1,6 +1,6 @@
 # ADR-0033: Corrections from building the observability layer
 
-- **Status:** Accepted
+- **Status:** Accepted (rule 10 resolved by ADR-0034)
 - **Date:** 2026-10-21
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0018 (resolves rule 5; supersedes the Grafana admin-password detail in rule 3), ADR-0019 (supersedes rule 1's bridge), ADR-0020 (supersedes the `ai` part of rule 2, and rule 8)
