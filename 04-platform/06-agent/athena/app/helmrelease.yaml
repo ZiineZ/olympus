@@ -30,11 +30,11 @@ spec:
           app:
             image:
               repository: ghcr.io/ziinez/athena
-              tag: IMAGE_TAG # set from the first athena-image build of this PR
+              tag: d1591e7be05cb9c177daf092e9f21997c7c43456@sha256:004307b5734a7b28153751d0fd3738e9ba7a8423412eab26acd43ba3e47ca0d7
             env:
               ANTHROPIC_MODEL: claude-opus-5-5
               ATHENA_REPO: ZiineZ/olympus
-              ATHENA_GITHUB_APP_ID: "APP_ID" # not secret: the private key is what grants access
+              ATHENA_GITHUB_APP_ID: "5423524" # not secret: the private key is what grants access
               CLAUDE_CODE_OAUTH_TOKEN:
                 valueFrom:
                   secretKeyRef: {name: athena-claude, key: CLAUDE_CODE_OAUTH_TOKEN}
