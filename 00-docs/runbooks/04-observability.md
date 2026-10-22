@@ -31,8 +31,8 @@ On top of the upstream Kubernetes, node and VictoriaMetrics rules, each Olympus 
 |---|---|---|---|
 | `FluxResourceNotReady` | warning | a Flux resource hasn't applied for 15 min: the cluster no longer matches git | `flux get all -A` |
 | `FluxResourceSuspended` | warning | something has been suspended for a day, so it ignores git | resume it after the break-glass work |
-| `BackupStale` | warning | a namespace's last backup is more than 26 h old | its `Schedule`; `kubectl -n k8up logs deploy/k8up` |
-| `BackupErrors` / `BackupJobFailed` | warning | restic skipped files, or a backup/check/prune job failed | the job pod's log in that namespace |
+| `BackupStale` | warning | no backup of a namespace has succeeded in 26 h | its `Schedule`; `kubectl -n k8up logs deploy/k8up` |
+| `BackupJobFailed` | warning | a backup, check or prune job failed | the job pod's log in that namespace |
 | `CloudflaredTunnelDown` | critical | no tunnel connection: every public site is down | cloudflared's log; the `cloudflared-tunnel` credentials |
 | `CiliumBpfMapPressure` / `CiliumUnreachableNodes` | warning | a full eBPF map, or nodes that can't reach each other | `cilium status` from the Cilium pod |
 | `NodeMemoryPressure` | warning | tasks wait for memory more than 10% of the time | `kubectl top pods -A --sort-by=memory` |

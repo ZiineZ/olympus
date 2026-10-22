@@ -31,14 +31,14 @@ Two constraints shape where these monitors live:
    |---|---|---|
    | Cilium | agent, Hubble flow metrics, operator | `CiliumBpfMapPressure`, `CiliumUnreachableNodes` (warning) |
    | Flux (via the Flux Operator's `flux_resource_info`) | flux-operator | `FluxResourceNotReady` after 15 min, `FluxResourceSuspended` after 24 h (warning: a suspended resource ignores git) |
-   | k8up | operator job counters, plus restic results pushed by every backup pod | `BackupStale` (no backup in 26 h), `BackupErrors`, `BackupJobFailed` (warning) |
+   | k8up | operator job counters | `BackupStale` (no successful backup in 26 h), `BackupJobFailed` (warning) |
    | cloudflared | its metrics port | `CloudflaredTunnelDown` (critical: every public site is down) |
    | nodes (in `victoria-metrics`) | already scraped by node-exporter | `NodeMemoryPressure` (warning), `NodeMemoryStall` (critical) from PSI |
 
-4. **k8up pushes into VMSingle.**
-   - VMSingle has a Pushgateway-compatible endpoint, and the operator-wide `BACKUP_PROMURL` points there. No Pushgateway is deployed.
-   - Before this, every backup pod pushed to k8up's default `http://127.0.0.1/` and logged an error.
-   - `BackupStale` uses MetricsQL's `lag()`, so it starts watching a namespace after its first backup. A brand-new namespace doesn't alert during its first day.
+4. **k8up's backup pods push no metrics** (`BACKUP_PROMURL: ""`).
+   - Their push client sends Prometheus protobuf, which VictoriaMetrics can't ingest. The rehearsal caught this: a test push in text format worked, but every real push was rejected.
+   - k8up's default push target, `http://127.0.0.1/`, only made every backup pod log an error.
+   - The operator's counters are enough. `BackupStale` fires when a namespace's backup counter hasn't grown in 26 h. It only covers namespaces that already had a `Schedule` 26 h earlier, so a brand-new namespace doesn't alert during its first day.
 5. **Dashboards:** only Cilium's and Hubble's, which the Cilium chart ships as `grafana_dashboard` ConfigMaps for the running version.
 6. **Not now:** each item comes back on its trigger.
 
@@ -59,7 +59,7 @@ Two constraints shape where these monitors live:
 
 - **All Olympus rules in `victoria-metrics/`:** no upward dependency, but rules drift away from the component they describe. Rejected (ADR-0003 rule 6).
 - **Prometheus Operator CRDs, so charts can ship their ServiceMonitors:** dozens more CRDs, and charts in lower layers still install before them. Rejected.
-- **A Pushgateway for k8up:** one more workload to run and back up. VMSingle already accepts the same pushes. Rejected.
+- **A Pushgateway for k8up's restic stats:** one more workload to run, for snapshot counts nobody alerts on. Rejected. The operator's counters answer "did the backup run and succeed?".
 - **k8up's chart rules:** they depend on kube-state-metrics job labels that aren't exported here, and on the Prometheus Operator CRDs. Rejected; Olympus's rules use metrics that exist.
 
 ## Compliance
