@@ -16,6 +16,7 @@ spec:
           name: athena # ./rbac.yaml
         pod:
           priorityClassName: agent
+          automountServiceAccountToken: true # app-template's default is off; kubectl needs it
           hostUsers: false
           nodeSelector:
             olympus/tier: heavy

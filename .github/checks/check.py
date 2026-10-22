@@ -15,7 +15,9 @@ import subprocess
 import sys
 import tempfile
 import tomllib
+from fnmatch import fnmatch
 from pathlib import Path
+from urllib.parse import urlparse
 
 ROOT = Path(subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True).stdout.strip())
 ALLOWED_ROOT = {"00-docs", "01-talos", "02-bootstrap", "03-cluster", "04-platform", "05-apps",
@@ -231,6 +233,29 @@ def check_bootstrap_literals(files):
     return errs
 
 
+ATHENA_EGRESS = "04-platform/06-agent/athena/app/networkpolicy.yaml"
+
+
+def check_athena_egress(files):
+    """ADR-0035: every chart source is in Athena's egress allow list, so `mise run check` works in its pod."""
+    if ATHENA_EGRESS not in files:
+        return []
+    allowed = [f.get("matchName") or f.get("matchPattern")
+               for doc in yaml_docs((ROOT / ATHENA_EGRESS).read_text())
+               for rule in doc["spec"].get("egress", []) for f in rule.get("toFQDNs", [])]
+    errs = []
+    for f in [f for f in files if re.match(r"0[0-9]-.*\.yaml$", f)]:
+        text = (ROOT / f).read_text()
+        if not re.search(r"^kind: (OCIRepository|HelmRepository|GitRepository)$", text, re.M):
+            continue
+        for doc in yaml_docs(text):
+            if doc.get("kind") in ("OCIRepository", "HelmRepository", "GitRepository"):
+                host = urlparse(doc["spec"]["url"]).hostname
+                if not any(fnmatch(host, a) for a in allowed):
+                    errs.append(f"{f}: chart source {host} is missing from {ATHENA_EGRESS} (ADR-0035)")
+    return errs
+
+
 def check_render(files):
     """kustomize build every Flux path, substitute ${VARS}, validate; helm template every HelmRelease."""
     if "03-cluster/kustomization.yaml" not in files:
@@ -402,6 +427,7 @@ def main():
         "orphans": check_orphans(files),
         "bootstrap-literals": check_bootstrap_literals(files),
         "render": check_render(files),
+        "athena-egress": check_athena_egress(files),
         "sops-encrypted": check_sops_encrypted(files),
     }
     if "--pr" in sys.argv:

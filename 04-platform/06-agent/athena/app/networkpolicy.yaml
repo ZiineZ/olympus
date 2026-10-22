@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/cilium.io/ciliumnetworkpolicy_v2.json
-# Athena can reach Anthropic, GitHub, the API server, VMSingle and Hubble Relay, and nothing else.
+# Athena can reach Anthropic, GitHub, the chart sources, the API server, VMSingle and Hubble Relay, and nothing else.
 # Nothing can reach Athena: exec travels through the API server (ADR-0024 rules 13-14).
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
@@ -28,6 +28,19 @@ spec:
         - matchName: codeload.github.com
         - matchName: objects.githubusercontent.com
         - matchName: raw.githubusercontent.com
+        - matchName: release-assets.githubusercontent.com
+      toPorts:
+        - ports: [{port: "443", protocol: TCP}]
+    # Chart sources, read-only, so `mise run check` (render) works before every push (ADR-0035).
+    # The `athena-egress` check fails when a chart source in the repo is missing here.
+    - toFQDNs:
+        - matchName: ghcr.io
+        - matchName: pkg-containers.githubusercontent.com
+        - matchName: quay.io
+        - matchPattern: "*.quay.io"
+        - matchName: k8up-io.github.io
+        - matchName: kubernetes-sigs.github.io
+        - matchName: pkgs.tailscale.com
       toPorts:
         - ports: [{port: "443", protocol: TCP}]
     - toEndpoints:
