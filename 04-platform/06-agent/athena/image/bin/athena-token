@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Prints a GitHub App installation token for $ATHENA_REPO only (ADR-0024 rule 10). GitHub makes it valid
+# for 1 h; it is cached in /tmp and replaced after 55 min.
+set -euo pipefail
+key=/var/run/secrets/athena-github-app/private-key
+cache=/tmp/athena-token
+if [[ -s $cache ]] && (( $(stat -c %Y "$cache") > $(date +%s) - 3300 )); then cat "$cache"; exit; fi
+
+b64url() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+now=$(date +%s)
+claims=$(printf '{"iat":%d,"exp":%d,"iss":"%s"}' $((now - 60)) $((now + 540)) "$ATHENA_GITHUB_APP_ID")
+unsigned="$(printf '{"alg":"RS256","typ":"JWT"}' | b64url).$(printf '%s' "$claims" | b64url)"
+jwt="$unsigned.$(printf '%s' "$unsigned" | openssl dgst -sha256 -sign "$key" | b64url)"
+
+api() { curl -fsS -H "Authorization: Bearer $jwt" -H "Accept: application/vnd.github+json" "$@"; }
+installation=$(api "https://api.github.com/repos/$ATHENA_REPO/installation" | yq -p json .id)
+token=$(api -X POST -d "{\"repositories\":[\"${ATHENA_REPO#*/}\"]}" \
+  "https://api.github.com/app/installations/$installation/access_tokens" | yq -p json .token)
+(umask 077; printf '%s' "$token" > "$cache")
+printf '%s\n' "$token"

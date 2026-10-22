@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: athena
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  values:
+    controllers:
+      athena:
+        strategy: Recreate # RWO home volume
+        serviceAccount:
+          name: athena # ./rbac.yaml
+        pod:
+          priorityClassName: agent
+          hostUsers: false
+          nodeSelector:
+            olympus/tier: heavy
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000 # also the backup pods' UID (03-cluster/components/backup)
+            runAsGroup: 1000
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile: {type: RuntimeDefault}
+        containers:
+          app:
+            image:
+              repository: ghcr.io/ziinez/athena
+              tag: IMAGE_TAG # set from the first athena-image build of this PR
+            env:
+              ANTHROPIC_MODEL: claude-opus-5-5
+              ATHENA_REPO: ZiineZ/olympus
+              ATHENA_GITHUB_APP_ID: "APP_ID" # not secret: the private key is what grants access
+              CLAUDE_CODE_OAUTH_TOKEN:
+                valueFrom:
+                  secretKeyRef: {name: athena-claude, key: CLAUDE_CODE_OAUTH_TOKEN}
+            # A runaway session is OOMKilled inside this limit instead of starving the node (ADR-0024 rule 2)
+            resources: {requests: {cpu: 500m, memory: 2Gi}, limits: {memory: 2Gi}}
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: {drop: [ALL]}
+    persistence:
+      home:
+        type: persistentVolumeClaim
+        storageClass: local-path
+        accessMode: ReadWriteOnce
+        size: 5Gi
+        retain: true
+        suffix: home # PVC athena-home (ADR-0024 rule 3)
+        globalMounts:
+          - path: /home/athena
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+      github-app:
+        type: secret
+        name: athena-github-app
+        defaultMode: 0440 # readable through fsGroup
+        globalMounts:
+          - path: /var/run/secrets/athena-github-app
+            readOnly: true

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# gh with an app installation token, so PRs and issues are opened by athena-ziinez[bot].
+GH_TOKEN=$(athena-token) exec /opt/tools/bin/gh "$@"

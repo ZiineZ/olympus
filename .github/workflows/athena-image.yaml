@@ -1,0 +1,38 @@
+# Builds Athena's image (ADR-0024) when its inputs change, tagged with the commit SHA. Same-repo PRs push
+# too, so a PR can be rehearsed with its own image. The HelmRelease pins tag + digest; Renovate bumps it.
+name: athena-image
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - 04-platform/06-agent/athena/image/**
+      - .config/mise.toml
+      - .config/mise.lock
+      - .github/workflows/athena-image.yaml
+  pull_request:
+    paths: *paths
+permissions: {}
+jobs:
+  build:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+          IMAGE: ghcr.io/ziinez/athena:${{ github.event.pull_request.head.sha || github.sha }}
+          SOURCE: https://github.com/${{ github.repository }}
+        run: |
+          printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+          docker buildx build . --file 04-platform/06-agent/athena/image/Dockerfile \
+            --secret id=github_token,env=GITHUB_TOKEN \
+            --label org.opencontainers.image.source="$SOURCE" \
+            --tag "$IMAGE" --push
+          echo "\`$IMAGE@$(docker buildx imagetools inspect "$IMAGE" --format '{{.Manifest.Digest}}')\`" >> "$GITHUB_STEP_SUMMARY"

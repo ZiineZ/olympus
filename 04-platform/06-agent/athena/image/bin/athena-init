@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Pod start: make sure the repo clone exists in the PVC home, then idle. Stan attaches with
+# `kubectl exec -it -n athena deploy/athena -- claude` (ADR-0024 rule 5).
+set -euo pipefail
+[[ -d ~/olympus/.git ]] || git clone --quiet "https://github.com/$ATHENA_REPO.git" ~/olympus
+trap 'exit 0' TERM
+sleep infinity & wait
