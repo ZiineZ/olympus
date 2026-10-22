@@ -124,7 +124,7 @@ Athena is Claude Code running in namespace `athena` ([ADR-0024](decisions/0024-a
 - **Talking to it:** `kubectl exec -it -n athena deploy/athena -- claude`, over the tailnet ([runbooks/06-athena.md](runbooks/06-athena.md)).
 - **Its image:** pinned Claude Code plus the repo's own mise toolchain, built by the `athena-image` workflow. It runs on your Claude subscription token.
 - **Its limits:** it reads through `view` and `olympus-cluster-read` (no Secrets, no exec, no writes). It writes only by opening PRs through its GitHub App `athena-ziinez`, which has no `workflows` permission. Its GitHub tokens are minted per use and expire within an hour.
-- **Its network:** egress is locked to the Anthropic API, GitHub, the kube-apiserver, VMSingle, and Hubble Relay. Its memory is capped at 2Gi.
+- **Its network:** egress is locked to the Anthropic API, GitHub, the chart sources its checks need, the kube-apiserver, VMSingle, and Hubble Relay. Its memory is capped at 2Gi.
 - **How it works:** its knowledge entrypoint is the `olympus` skill, and every change goes through the `change` skill.
 - **Its memory:** long-term memory is this repo; session memory lives on its PVC.
 
