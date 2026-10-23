@@ -7,7 +7,7 @@ set -uo pipefail
 cd ~/olympus
 trap 'kill "${child:-0}" 2>/dev/null; exit 0' TERM
 while true; do
-  if [[ -f ~/.claude/athena-setup-done ]]; then
+  if claude auth status 2>/dev/null | grep -q '"loggedIn": true'; then
     claude remote-control --name athena --capacity 4 </dev/null & child=$!
     wait "$child"
   fi

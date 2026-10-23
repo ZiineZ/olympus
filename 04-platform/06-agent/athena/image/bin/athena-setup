@@ -5,8 +5,7 @@
 set -euo pipefail
 cd ~/olympus
 claude auth login
-trap 'touch ~/.claude/athena-setup-done; echo; echo "Done. Athena now runs Remote Control by itself: open the Claude app and pick \"athena\"."' EXIT
-trap 'exit 0' INT
 echo
-echo "Next: answer y to the prompts. When the session URL appears, press Ctrl+C."
-claude remote-control --name athena
+echo "Next: answer y to the prompts. When the session URL appears, press Ctrl+C:"
+echo "the pod then keeps Remote Control running by itself."
+claude remote-control --name athena || true
