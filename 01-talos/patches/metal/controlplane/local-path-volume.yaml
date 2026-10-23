@@ -1,0 +1,19 @@
+# REAL HARDWARE ONLY (applied by `mise run talos:render`, never by the Docker rehearsal, which has
+# its own directory stand-in in patches/rehearsal/). Control planes are the heavy tier (ADR-0008):
+# local-path volumes live only there (ADR-0016).
+# EPHEMERAL (/var: images, logs, etcd) is capped, so the local-path partition gets the rest of the
+# system disk. Both sizes are calibration knobs.
+apiVersion: v1alpha1
+kind: VolumeConfig
+name: EPHEMERAL
+provisioning:
+  maxSize: 150GiB
+---
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: local-path # mounted at /var/mnt/local-path (local-path-provisioner's nodePathMap)
+provisioning:
+  diskSelector:
+    match: system_disk
+  minSize: 50GiB
+  grow: true

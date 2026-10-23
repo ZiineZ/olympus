@@ -94,11 +94,114 @@ kubectl apply --server-side -k 04-platform/01-network/gateway-api-crds/app
 helmfile --file 02-bootstrap/helmfile.yaml.gotmpl sync
 '''
 
+[tasks."talos:secrets"]
+description = "Once per cluster: generate the Talos secrets bundle straight into 01-talos/secrets.sops.yaml (ADR-0028)."
+shell = "bash -c"
+run = '''
+set -euo pipefail
+f=01-talos/secrets.sops.yaml
+[[ ! -e $f ]] || { echo "error: $f exists; it is generated once per cluster" >&2; exit 1; }
+talosctl gen secrets -o - | sops encrypt --filename-override "$f" --input-type yaml --output-type yaml /dev/stdin > "$f.tmp"
+mv "$f.tmp" "$f"
+echo "encrypted $f"
+'''
+
+[tasks."talos:render"]
+description = "Render one node's config and the talosconfig into 01-talos/clusterconfig/ (git-ignored: it holds secrets) (ADR-0028)."
+usage = 'arg "<node>" help="Node name from 01-talos/cluster.yaml"'
+shell = "bash -c"
+run = '''
+set -euo pipefail
+umask 077 # the rendered files hold the cluster's secrets
+cfg=01-talos/cluster.yaml out=01-talos/clusterconfig
+export N="$usage_node"
+n='.nodes[] | select(.name == strenv(N))'
+yq -e "$n" "$cfg" >/dev/null 2>&1 || { echo "error: no node '$N' in $cfg" >&2; exit 1; }
+q() { yq -e "$1" "$cfg"; }
+role=$(q "$n | .role") ip=$(q "$n | .ip") mac=$(q "$n | .mac") disk=$(q "$n | .installDisk") schematic=$(q "$n | .schematic")
+[[ $mac =~ ^([0-9a-f]{2}:){5}[0-9a-f]{2}$ ]] || {
+  echo "error: set mac for $N in $cfg (lowercase), from the live boot: talosctl get links --insecure -n <address>" >&2; exit 1; }
+talos=$(q .talosVersion) k8s=$(q .kubernetesVersion) endpoint=$(q .endpoint)
+vip=$(printf '%s' "$endpoint" | sed -E 's#^https://([^:/]+).*#\1#')
+# the installer for this node's extensions and kernel args, from the Image Factory
+id=$(curl -fsS -X POST --data-binary "@01-talos/schematics/$schematic.yaml" https://factory.talos.dev/schematics | yq -p json -e .id)
+
+mkdir -p "$out"
+node_patch="$out/.$N-node.yaml"
+trap 'rm -f "$node_patch"' EXIT
+{ # the node's own documents, from its cluster.yaml entry (ADR-0028 rule 5)
+  printf 'apiVersion: v1alpha1\nkind: HostnameConfig\nhostname: %s\nauto: off\n' "$N"
+  printf -- '---\napiVersion: v1alpha1\nkind: LinkAliasConfig\nname: lan\nselector:\n  match: mac(link.permanent_addr) == "%s"\n' "$mac"
+  printf -- '---\napiVersion: v1alpha1\nkind: LinkConfig\nname: lan\naddresses:\n  - address: %s/%s\nroutes:\n  - gateway: %s\n' \
+    "$ip" "$(q .network.prefix)" "$(q .network.gateway)"
+  printf -- '---\napiVersion: v1alpha1\nkind: ResolverConfig\nnameservers:\n'
+  q '.network.nameservers[]' | sed 's/^/  - address: /'
+  if [[ $role == controlplane ]]; then
+    printf -- '---\napiVersion: v1alpha1\nkind: Layer2VIPConfig\nname: %s\nlink: lan\n' "$vip"
+  fi
+  # Talos 1.14 moved install settings into UnattendedInstallConfig; gen config sets its installer image
+  printf -- '---\napiVersion: v1alpha1\nkind: UnattendedInstallConfig\nprovisioning:\n  diskSelector:\n    match: disk.transport == "%s"\n' "$disk"
+} > "$node_patch"
+
+# role patches must use the role flag: plain --config-patch also patches the other role's config
+flag=--config-patch-control-plane; [[ $role == worker ]] && flag=--config-patch-worker
+args=()
+for f in 01-talos/patches/global/*.yaml; do args+=(--config-patch "@$f"); done
+for f in 01-talos/patches/"$role"/*.yaml 01-talos/patches/metal/"$role"/*.yaml; do
+  if [[ -e $f ]]; then args+=("$flag" "@$f"); fi
+done
+args+=("$flag" "@$node_patch")
+secrets="$out/.secrets.yaml"
+trap 'rm -f "$node_patch" "$secrets"' EXIT
+sops decrypt 01-talos/secrets.sops.yaml > "$secrets" # git-ignored folder, mode 600; removed on exit
+talosctl gen config olympus "$endpoint" --with-secrets "$secrets" --force \
+  --kubernetes-version "${k8s#v}" --install-image "factory.talos.dev/metal-installer/$id:$talos" \
+  --output-types "$role" --output "$out/$N.yaml" "${args[@]}"
+talosctl validate --mode metal --config "$out/$N.yaml"
+talosctl gen config olympus "$endpoint" --with-secrets "$secrets" --force --output-types talosconfig --output "$out/talosconfig"
+talosctl --talosconfig "$out/talosconfig" config endpoint $(yq '.nodes[] | select(.role == "controlplane") | .ip' "$cfg")
+echo "rendered $out/$N.yaml (installer $id:$talos)"
+'''
+
+[tasks."talos:apply"]
+description = "Apply a rendered node config (ADR-0028). --insecure <address> for the first apply to a node booted from the ISO; --dry-run shows the diff."
+usage = '''
+arg "<node>" help="Node name from 01-talos/cluster.yaml"
+flag "--insecure <address>" help="first apply: the node's maintenance-mode address, shown on its console"
+flag "--dry-run" help="show what would change, apply nothing"
+'''
+shell = "bash -c"
+run = '''
+set -euo pipefail
+out=01-talos/clusterconfig
+[[ -f $out/$usage_node.yaml ]] || { echo "error: run mise run talos:render $usage_node first" >&2; exit 1; }
+ip=$(N="$usage_node" yq -e '.nodes[] | select(.name == strenv(N)) | .ip' 01-talos/cluster.yaml)
+args=(--talosconfig "$out/talosconfig" apply-config --file "$out/$usage_node.yaml")
+if [[ -n ${usage_insecure:-} ]]; then args+=(--insecure --nodes "$usage_insecure"); else args+=(--nodes "$ip"); fi
+if [[ ${usage_dry_run:-false} == true ]]; then args+=(--dry-run); fi
+talosctl "${args[@]}"
+'''
+
+[tasks."talos:bootstrap"]
+description = "Once per cluster, after the first control plane installed: start etcd and fetch the admin kubeconfig (ADR-0015, ADR-0028)."
+shell = "bash -c"
+run = '''
+set -euo pipefail
+umask 077 # the admin kubeconfig
+out=01-talos/clusterconfig
+ip=$(yq -e '[.nodes[] | select(.role == "controlplane")][0].ip' 01-talos/cluster.yaml)
+talosctl --talosconfig "$out/talosconfig" --nodes "$ip" bootstrap
+talosctl --talosconfig "$out/talosconfig" --nodes "$ip" kubeconfig "$out/kubeconfig" --force
+echo "next: export KUBECONFIG=$PWD/$out/kubeconfig TALOSCONFIG=$PWD/$out/talosconfig, then runbook 02"
+'''
+
 [tasks."rehearsal:up"]
 description = "Throwaway Talos cluster in Docker/OrbStack (ADR-0025). Run only on Stan's go."
 shell = "bash -c"
 run = '''
 set -euo pipefail
+# OrbStack keeps its socket in ~/.orbstack when /var/run/docker.sock is absent (e.g. after a reboot)
+[[ -n ${DOCKER_HOST:-} || -S /var/run/docker.sock ]] || export DOCKER_HOST="unix://$HOME/.orbstack/run/docker.sock"
 cfg=01-talos/cluster.yaml
 mkdir -p .rehearsal
 export TALOSCONFIG="$PWD/.rehearsal/talosconfig" KUBECONFIG="$PWD/.rehearsal/kubeconfig"
@@ -121,6 +224,8 @@ description = "Destroy the rehearsal cluster and its local state (ADR-0025)."
 shell = "bash -c"
 run = '''
 set -euo pipefail
+# OrbStack keeps its socket in ~/.orbstack when /var/run/docker.sock is absent (e.g. after a reboot)
+[[ -n ${DOCKER_HOST:-} || -S /var/run/docker.sock ]] || export DOCKER_HOST="unix://$HOME/.orbstack/run/docker.sock"
 TALOSCONFIG="$PWD/.rehearsal/talosconfig" talosctl cluster destroy --name olympus-rehearsal --state "$PWD/.rehearsal/state"
 rm -rf .rehearsal
 '''
