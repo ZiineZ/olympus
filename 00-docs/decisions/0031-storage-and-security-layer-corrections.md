@@ -1,6 +1,6 @@
 # ADR-0031: Corrections from building the storage and security layer
 
-- **Status:** Accepted
+- **Status:** Accepted (one per-policy exemption, `tuppr` from `memory-limit-equals-request`, added by ADR-0037)
 - **Date:** 2026-10-21
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0002 (supersedes the `olympus/policy` label), ADR-0016, ADR-0021 (supersedes rule 3's exemption mechanism and the `pvc-explicit-storage-class` row)

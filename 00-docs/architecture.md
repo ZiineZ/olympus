@@ -95,7 +95,7 @@ Not offered: LAN-only hostnames, NodePorts, `hostNetwork` apps ([ADR-0011](decis
 | Flux Kustomizations | every object in git exists, and objects removed from git are pruned | 10m |
 | Flux HelmRelease drift detection | live Helm-managed objects match their release | 30m |
 | Admission policies (Pod Security + VAP) | nothing non-compliant enters the API. VAPs are Warn + Audit until the follow-up PR switches the strict ones to Deny (ADR-0021 rule 4) | every request |
-| tuppr | nodes run the Talos and Kubernetes versions in git | on change |
+| tuppr | nodes run the Talos and Kubernetes versions in git, one node at a time behind health gates ([runbooks/05-upgrades.md](runbooks/05-upgrades.md)) | on change |
 | Renovate | pinned versions don't go stale | weekly |
 | CI `validate` | git itself is consistent: render, schema, policies, docs, co-changes | every PR |
 | Alerts → ntfy | Stan learns about failures, drift reverts, stale backups | continuous |

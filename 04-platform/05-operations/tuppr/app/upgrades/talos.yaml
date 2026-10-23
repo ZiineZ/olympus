@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/tuppr.home-operations.com/talosupgrade_v1alpha1.json
+# The Talos version every node should run. Change it together with talosVersion in 01-talos/cluster.yaml
+# (check versions-match); Renovate's `talos` group bumps both in one PR (ADR-0023). Each node keeps its own
+# Image Factory schematic: tuppr swaps only the version of the node's current install image.
+apiVersion: tuppr.home-operations.com/v1alpha1
+kind: TalosUpgrade
+metadata:
+  name: talos
+  namespace: tuppr
+spec:
+  talos:
+    version: v1.14.4
+  talosctl:
+    image:
+      repository: ghcr.io/siderolabs/talosctl
+      tag: v1.14.4@sha256:b3233234327350f20ed194f3fad83d90a64344c1940f839c7b0c0abef50c8c33
+  # One node at a time (ADR-0023): tuppr's default `parallelism: 1`.
+  healthChecks: # before each node: every node Ready, and Flux applying all of git
+    - apiVersion: v1
+      kind: Node
+      expr: status.conditions.filter(c, c.type == "Ready").all(c, c.status == "True")
+      timeout: 10m
+    - apiVersion: kustomize.toolkit.fluxcd.io/v1
+      kind: Kustomization
+      expr: status.conditions.exists(c, c.type == "Ready" && c.status == "True")
+      timeout: 10m

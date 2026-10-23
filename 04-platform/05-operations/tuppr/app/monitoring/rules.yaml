@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/operator.victoriametrics.com/vmrule_v1beta1.json
+# A subset of the chart's own rules (its PrometheusRule needs Prometheus Operator CRDs, ADR-0034).
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: tuppr
+spec:
+  groups:
+    - name: tuppr
+      rules:
+        - alert: TalosUpgradeFailed
+          expr: max(tuppr_talos_upgrade_phase{phase="Failed"}) == 1 or max(tuppr_talos_upgrade_nodes_failed) > 0
+          for: 1m
+          labels: {severity: critical}
+          annotations:
+            summary: A Talos upgrade failed
+            description: tuppr stopped the rollout. `kubectl -n tuppr describe talosupgrade talos` and the upgrade Job's log say why (runbook 05).
+        - alert: KubernetesUpgradeFailed
+          expr: max(tuppr_kubernetes_upgrade_phase{phase="Failed"}) == 1
+          for: 1m
+          labels: {severity: critical}
+          annotations:
+            summary: A Kubernetes upgrade failed
+            description: "`kubectl -n tuppr describe kubernetesupgrade kubernetes` and the upgrade Job's log say why (runbook 05)."
+        - alert: UpgradeJobRunningTooLong
+          expr: max(tuppr_upgrade_jobs_active) > 0
+          for: 1h
+          labels: {severity: warning}
+          annotations:
+            summary: A tuppr upgrade Job has been running for over an hour
+            description: A node may be stuck rebooting or failing a health gate. `kubectl -n tuppr get jobs,pods` shows which.

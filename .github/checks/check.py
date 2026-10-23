@@ -172,6 +172,25 @@ def check_talos(files):
     return errs
 
 
+TUPPR_UPGRADES = {"talosVersion": ("04-platform/05-operations/tuppr/app/upgrades/talos.yaml", "talos"),
+                  "kubernetesVersion": ("04-platform/05-operations/tuppr/app/upgrades/kubernetes.yaml", "kubernetes")}
+
+
+def check_versions_match(files):
+    """ADR-0023: the versions in 01-talos/cluster.yaml equal the tuppr CRs that roll them out."""
+    if "01-talos/cluster.yaml" not in files:
+        return []
+    cluster = yaml_load(ROOT / "01-talos/cluster.yaml")
+    errs = []
+    for key, (path, field) in TUPPR_UPGRADES.items():
+        if path not in files:
+            continue
+        version = yaml_load(ROOT / path)["spec"][field]["version"]
+        if version != cluster[key]:
+            errs.append(f"{path}: spec.{field}.version {version} != {key} {cluster[key]} in 01-talos/cluster.yaml")
+    return errs
+
+
 def check_component_shape(files):
     errs = []
     for ks in [f for g in COMPONENT_GLOBS for f in matches(g, files)]:
@@ -423,6 +442,7 @@ def main():
         "doc-links": check_doc_links(files),
         "no-versions-in-docs": check_no_versions_in_docs(files),
         "talos": check_talos(files),
+        "versions-match": check_versions_match(files),
         "component-shape": check_component_shape(files),
         "orphans": check_orphans(files),
         "bootstrap-literals": check_bootstrap_literals(files),

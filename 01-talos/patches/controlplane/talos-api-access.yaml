@@ -1,0 +1,9 @@
+# tuppr drives upgrades through the Talos API, so pods in namespace `tuppr`, and only there, get os:admin
+# (ADR-0023, ADR-0037). In Talos 1.14 this document is control-plane only; tuppr's docs still show the
+# older machine.features field.
+apiVersion: v1alpha1
+kind: KubeTalosAPIAccessConfig
+allowedRoles:
+  - os:admin
+allowedKubernetesNamespaces:
+  - tuppr

@@ -155,13 +155,13 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 - **Network:** every namespace includes `03-cluster/components/default-deny` (ingress). Egress is open, except for `athena`.
 - **Our own apps** use the bjw-s `app-template` chart. Third-party software uses its upstream chart when maintained, otherwise `app-template`.
 - **New Deny policies** run in Warn/Audit mode for one week before switching to Deny.
-- **Policy exemptions** are matched on the built-in label `kubernetes.io/metadata.name`. Only `kube-system` and `flux-system` are exempt, and they're listed in each binding ([ADR-0031](decisions/0031-storage-and-security-layer-corrections.md)).
+- **Policy exemptions** are matched on the built-in label `kubernetes.io/metadata.name`. Only `kube-system` and `flux-system` are exempt, and they're listed in each binding ([ADR-0031](decisions/0031-storage-and-security-layer-corrections.md)). The one per-policy exception: `tuppr` is exempt from `memory-limit-equals-request`, because its upgrade Jobs hard-code their memory ([ADR-0037](decisions/0037-tuppr-build-corrections.md)).
 
-## Upgrades ([ADR-0023](decisions/0023-upgrades-renovate-tuppr.md))
+## Upgrades ([ADR-0023](decisions/0023-upgrades-renovate-tuppr.md), [ADR-0037](decisions/0037-tuppr-build-corrections.md))
 
 - **Renovate** runs Saturdays before 06:00 (Europe/Amsterdam), with a minimum release age of 3 days. Related versions are grouped into one PR.
 - **Never auto-merged:** Talos, Kubernetes, Cilium, Flux, Gateway API, tailscale, cloudflared, k8up, tuppr.
-- **tuppr** performs Talos and Kubernetes upgrades from its CRs, one node at a time, with health gates. Talos is upgraded before Kubernetes.
+- **tuppr** performs Talos and Kubernetes upgrades from its CRs, one node at a time, with health gates (all nodes Ready, all Flux Kustomizations Ready). Talos is upgraded before Kubernetes. Its Talos API access is `os:admin` for namespace `tuppr` only ([ADR-0037](decisions/0037-tuppr-build-corrections.md), [runbooks/05-upgrades.md](runbooks/05-upgrades.md)).
 - **Rollback:** `git revert` (Talos A/B rollback is break-glass only).
 
 ## Athena ([ADR-0024](decisions/0024-agent-athena.md), [ADR-0035](decisions/0035-athena-build-corrections.md))

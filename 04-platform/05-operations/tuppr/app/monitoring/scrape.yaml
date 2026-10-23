@@ -1,0 +1,11 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/operator.victoriametrics.com/vmpodscrape_v1beta1.json
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMPodScrape
+metadata:
+  name: tuppr
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tuppr
+  podMetricsEndpoints:
+    - port: metrics

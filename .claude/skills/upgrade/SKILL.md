@@ -59,7 +59,7 @@ Policy sources: **ADR-0023** (Renovate and tuppr) and **ADR-0008** (the Kubernet
 
 ## 4. Talos and Kubernetes upgrades (tuppr)
 
-- The PR changes **both** `01-talos/cluster.yaml` (`talosVersion`/`kubernetesVersion`) and the tuppr CR in `04-platform/05-operations/tuppr/app/`. `versions-match` fails otherwise.
+- The PR changes **both** `01-talos/cluster.yaml` (`talosVersion`/`kubernetesVersion`) and the tuppr CR in `04-platform/05-operations/tuppr/app/upgrades/`. `versions-match` fails otherwise. A Talos bump also moves the `talosctl` image in both CRs and the talosctl pin in `.config/mise.toml` (`talos` check). See `runbooks/05-upgrades.md`.
 - **After merge:** tuppr upgrades one node at a time, gated on all nodes Ready + Flux Ready. Watch, read-only:
   ```bash
   kubectl get talosupgrade,kubernetesupgrade -A
