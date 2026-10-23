@@ -223,6 +223,25 @@ def check_component_shape(files):
     return errs
 
 
+LOCK_PLATFORMS = ("linux-x64", "macos-arm64", "macos-x64")
+
+
+def check_mise_lock(files):
+    """ADR-0006/ADR-0038: .config/mise.lock pins every tool version in mise.toml, for every platform."""
+    tools = tomllib.loads((ROOT / ".config/mise.toml").read_text())["tools"]
+    lock = tomllib.loads((ROOT / ".config/mise.lock").read_text()).get("tools", {})
+    errs = []
+    for name, version in tools.items():
+        entry = next((e for e in lock.get(name, []) if e.get("version") == version), None)
+        if entry is None:
+            errs.append(f"{name} {version} is not in .config/mise.lock: run `mise lock --platform {','.join(LOCK_PLATFORMS)}`")
+            continue
+        missing = [pl for pl in LOCK_PLATFORMS if f"platforms.{pl}" not in entry]
+        if missing:
+            errs.append(f"{name} {version}: .config/mise.lock has no checksum for {', '.join(missing)}: run `mise lock --platform {','.join(LOCK_PLATFORMS)}`")
+    return errs
+
+
 def check_orphans(files):
     errs = []
     def listed(kustomization):
@@ -445,6 +464,7 @@ def main():
         "versions-match": check_versions_match(files),
         "component-shape": check_component_shape(files),
         "orphans": check_orphans(files),
+        "mise-lock": check_mise_lock(files),
         "bootstrap-literals": check_bootstrap_literals(files),
         "render": check_render(files),
         "athena-egress": check_athena_egress(files),
