@@ -8,6 +8,7 @@ metadata:
   namespace: tuppr
 spec:
   kubernetes:
+    # renovate: datasource=github-releases depName=kubernetes/kubernetes
     version: v1.36.5
   talosctl:
     image:
