@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# One-time, and again after a sign-out: signs Athena in to your claude.ai account and accepts
+# Remote Control's trust and consent prompts (ADR-0036). Run it with:
+#   kubectl exec -it -n athena deploy/athena -- athena-setup
+set -euo pipefail
+cd ~/olympus
+claude auth login
+trap 'touch ~/.claude/athena-setup-done; echo; echo "Done. Athena now runs Remote Control by itself: open the Claude app and pick \"athena\"."' EXIT
+trap 'exit 0' INT
+echo
+echo "Next: answer y to the prompts. When the session URL appears, press Ctrl+C."
+claude remote-control --name athena

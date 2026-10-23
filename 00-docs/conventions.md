@@ -164,11 +164,13 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 - **tuppr** performs Talos and Kubernetes upgrades from its CRs, one node at a time, with health gates. Talos is upgraded before Kubernetes.
 - **Rollback:** `git revert` (Talos A/B rollback is break-glass only).
 
-## Athena ([ADR-0024](decisions/0024-agent-athena.md))
+## Athena ([ADR-0024](decisions/0024-agent-athena.md), [ADR-0035](decisions/0035-athena-build-corrections.md))
 
+- **Talk to it** in the Claude app through Remote Control. Its claude.ai login lives on its volume, never in git ([ADR-0036](decisions/0036-athena-remote-control.md)).
 - **Read access:** `view` plus `olympus-cluster-read`. No Secrets, no exec, no write access, no Talos access, no age key.
 - **Write access:** git PRs only, through the GitHub App, with no `workflows` permission. Athena cannot merge.
-- **Egress:** only the Anthropic API, GitHub, the kube-apiserver, VMSingle, and Hubble Relay.
+- **Egress:** only the Anthropic API, GitHub, the chart sources (read-only, so `mise run check` works in its pod), the kube-apiserver, VMSingle, and Hubble Relay. The `athena-egress` check fails when a chart source is missing from `athena-egress` ([ADR-0035](decisions/0035-athena-build-corrections.md)).
+- **Its guardrails bind every Claude Code session in this repo:** `.claude/settings.json` denies cluster writes, `talosctl`, decryption and force pushes, and its hook runs `mise run check` before any `git push` or `gh pr create`.
 - **Memory:** a 2Gi limit, with PriorityClass `agent`.
 - Every change goes through the `change` skill. The `olympus` skill is the entrypoint.
 

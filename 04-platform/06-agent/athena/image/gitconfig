@@ -1,0 +1,8 @@
+# Athena commits as its GitHub App's bot user and pushes with short-lived app tokens (ADR-0024 rules 9-10).
+[user]
+	name = athena-ziinez[bot]
+	email = 346278690+athena-ziinez[bot]@users.noreply.github.com
+[credential "https://github.com"]
+	helper = athena
+[init]
+	defaultBranch = main

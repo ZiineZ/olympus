@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+    name: athena-github-app
+    namespace: athena
+stringData:
+    private-key: ENC[AES256_GCM,data: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,iv:bWHo3gH3/up6xvbwDodEwcItkver72iBxSOy73NfRQk=,tag:F8L0FTAPwyf4vjwAnvCroA==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB5ZHRsYmVydnNjcWY3UnBw
+            WURFVm9VWFZ6YjRkTU42VW8va1p1bEgzUTFjCllodHlVVWJTci9NeFNOUUFsYklu
+            TmxTdmJadDdSZVdsNTJqUVY4OHV5c28KLS0tIHRZcm1YZjM3d3llN3RmejgvT0Mr
+            S2RZVXpGZ0pKRWMrbktSWDJPTS8vWFkKHGy1BIiDZoF6EnefDRkYEki7UGkBwNst
+            wrN75SbpJUMeuvm/HnMBhUO14kBXUpzAho+eK6D5n1zxJyTu1IcZKg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1axnvv6sge9dx97peq2ks39a3smdtggas8cdasaaxtl0un3ck4pzsndgmku
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-22T08:53:21Z"
+    mac: ENC[AES256_GCM,data:J7JAtrLcKL3VfUl0JIA2uVw4PL2Br27RHvbm0h9PiLyrqYp8LHesAv/5/tWPkSk7clusDhnD1/tjweg9eTTQMOY8ctPkQdywgEjMeBiA/KsTS+srlZmSRLOxJmgzUzUqkDC1JTpiQ43ibEId0UzemunI5sn8UV1RLeUu47/4NUA=,iv:/ZiKmBRKL4ujoEeFJLmQNcxse9NHYLV7vAzxVTtBAGc=,tag:yEGREOITWY5ewczE5mkkYg==,type:str]
+    version: 3.13.3

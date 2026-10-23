@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: athena
+  namespace: flux-system
+  annotations:
+    olympus/description: Athena, Claude Code in a pod. Reads the cluster, changes it only through PRs, and can reach nothing but Anthropic, GitHub and the cluster's own APIs.
+    olympus/docs: 00-docs/architecture.md,00-docs/runbooks/06-athena.md
+    olympus/adr: "0024"
+spec:
+  interval: 10m
+  path: ./04-platform/06-agent/athena/app
+  targetNamespace: athena
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: k8up

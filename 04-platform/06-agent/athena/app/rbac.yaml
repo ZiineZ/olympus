@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/serviceaccount-v1.json
+# Athena reads everything except Secrets and changes nothing (ADR-0024 rules 6-7). Exactly these two bindings.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: athena
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: athena-view
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: ServiceAccount
+    name: athena
+    namespace: athena
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: athena-cluster-read
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: olympus-cluster-read
+subjects:
+  - kind: ServiceAccount
+    name: athena
+    namespace: athena
+---
+# The one write-ish permission humans get by default: opening a shell in Athena's pod (ADR-0024 rule 5)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: athena-exec
+rules:
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [get, list]
+  - apiGroups: [""]
+    resources: [pods/exec]
+    verbs: [create]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: athena-exec
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: athena-exec
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: olympus:viewers

@@ -26,7 +26,7 @@ description: Periodic read-only review of the Olympus cluster and repo covering 
 
 ## 3. Security posture
 
-- **Athena:** bindings are exactly `view` + `olympus-cluster-read` (+ nothing else). `olympus-cluster-read` has no `*`, no secrets, no write verbs. The `athena-egress` CiliumNetworkPolicy exists and is unchanged.
+- **Athena:** bindings are exactly `view` + `olympus-cluster-read` (+ nothing else). `olympus-cluster-read` has no `*`, no secrets, no write verbs. The `athena-egress` CiliumNetworkPolicy exists and is unchanged. The GitHub App `athena-ziinez` has exactly ADR-0024's permissions, with no Workflows or Administration (the app's settings page), and is installed on `olympus` only.
 - **Kite's ClusterRole:** read-only, no secrets.
 - **`olympus:viewers`:** read-only, apart from `athena-exec`.
 - **Pod Security:** the namespaces with exception labels match the exceptions table in `conventions.md` exactly.

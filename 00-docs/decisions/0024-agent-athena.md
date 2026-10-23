@@ -1,6 +1,6 @@
 # ADR-0024: Cluster agent Athena: Claude Code in-cluster, read-only, changes only through PRs
 
-- **Status:** Accepted
+- **Status:** Accepted (rule 19 and the second key superseded by ADR-0033: Kite's AI is off; rules 1, 9, 10 and 14 amended by ADR-0035; access (rule 5) and the Claude credential amended by ADR-0036)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0001, ADR-0004, ADR-0005, ADR-0010, ADR-0012, ADR-0014, ADR-0020, ADR-0022

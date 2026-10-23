@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: athena
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+  values:
+    controllers:
+      athena:
+        strategy: Recreate # RWO home volume
+        serviceAccount:
+          name: athena # ./rbac.yaml
+        pod:
+          priorityClassName: agent
+          automountServiceAccountToken: true # app-template's default is off; kubectl needs it
+          hostUsers: false
+          nodeSelector:
+            olympus/tier: heavy
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000 # also the backup pods' UID (03-cluster/components/backup)
+            runAsGroup: 1000
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile: {type: RuntimeDefault}
+        containers:
+          app:
+            image:
+              repository: ghcr.io/ziinez/athena
+              tag: eae689a2a1f3e9e7c7d57de82e2135faa3131443@sha256:d318cfa382b89c1dfc61b9ecaf1d3b5d861c80d5b4944ae9d36e6b082e376a1e
+            env:
+              ANTHROPIC_MODEL: claude-opus-5-5
+              ATHENA_REPO: ZiineZ/olympus
+              ATHENA_GITHUB_APP_ID: "5423524" # not secret: the private key is what grants access
+              # No Claude token here: Remote Control needs a full claude.ai login, made once with athena-setup
+              # and kept on the athena-home volume (ADR-0036)
+            # A runaway session is OOMKilled inside this limit instead of starving the node (ADR-0024 rule 2)
+            resources: {requests: {cpu: 500m, memory: 2Gi}, limits: {memory: 2Gi}}
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: {drop: [ALL]}
+    persistence:
+      home:
+        type: persistentVolumeClaim
+        storageClass: local-path
+        accessMode: ReadWriteOnce
+        size: 5Gi
+        retain: true
+        suffix: home # PVC athena-home (ADR-0024 rule 3)
+        globalMounts:
+          - path: /home/athena
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+      github-app:
+        type: secret
+        name: athena-github-app
+        defaultMode: 0440 # readable through fsGroup
+        globalMounts:
+          - path: /var/run/secrets/athena-github-app
+            readOnly: true
