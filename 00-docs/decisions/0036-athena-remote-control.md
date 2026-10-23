@@ -24,7 +24,7 @@ It has three requirements (Remote Control docs):
 2. **The one-time sign-in is `athena-setup`**, run with `kubectl exec -it -n athena deploy/athena -- athena-setup`.
    - It runs `claude auth login`: Stan opens the printed URL on his own device and pastes the code back.
    - It then runs Remote Control once interactively, so Stan answers its trust and consent prompts.
-   - Until that has happened, the pod only waits.
+   - The pod starts serving as soon as `claude auth status` reports a login, and retries every 10 seconds until the prompts have been answered. There's no marker file to forget: the rehearsal showed that a marker written at the end of setup can be lost when setup is interrupted.
 3. **The login lives on the `athena-home` volume** (`~/.claude/`), not in git. Claude Code refreshes it through `platform.claude.com`, which joins `athena-egress`.
    - The `athena-claude` Secret (the setup-token token) is removed. An environment token would take precedence over the login, and Remote Control refuses it.
 4. **Telemetry and error reporting stay off** through `DISABLE_TELEMETRY` and `DISABLE_ERROR_REPORTING`. Only `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` goes, because it also turns Remote Control off.
