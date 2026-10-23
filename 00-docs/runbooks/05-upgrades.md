@@ -14,6 +14,14 @@ Renovate opens PRs on Saturday mornings, only for releases at least 3 days old. 
 
 For a waiting PR, ask Athena to review it. The `upgrade` skill reads the changelog and diffs the values. Then merge it, or close it to skip that version.
 
+Two kinds of PR need one extra commit before they can pass (ADR-0038):
+- **Claude Code or mise in Athena's image:** Renovate bumps the version but can't compute the download checksum beside it, so the `athena-image` build fails until the `--checksum` is updated. Ask Athena to do it. Its `upgrade` skill knows where each checksum is published.
+- **A mise tool whose `mise-lock` check fails:** run `mise lock --platform linux-x64,macos-arm64,macos-x64` and push `.config/mise.lock` to the PR.
+
+**How Renovate works here:**
+- Config: `.github/renovate.json5`. Renovate runs as the Mend-hosted GitHub app (installed on `olympus` only).
+- Auto-merge uses GitHub's own auto-merge. Renovate may skip the review (ruleset `main-approval`), but never the PR or `validate`.
+
 ## Talos and Kubernetes (tuppr)
 
 A Talos or Kubernetes PR changes four places at once. Renovate's `talos` and `kubernetes` groups keep them together, and `versions-match` and `talos` fail otherwise:
