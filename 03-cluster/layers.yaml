@@ -67,6 +67,22 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
+  name: layer-05-operations
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./04-platform/05-operations
+  prune: true
+  wait: false
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: layer-04-observability
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
   name: layer-06-agent
   namespace: flux-system
 spec:
@@ -78,4 +94,4 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: layer-04-observability # 05-operations (tuppr) joins the chain when it is added
+    - name: layer-05-operations

@@ -30,6 +30,7 @@ description: Periodic read-only review of the Olympus cluster and repo covering 
 - **Kite's ClusterRole:** read-only, no secrets.
 - **`olympus:viewers`:** read-only, apart from `athena-exec`.
 - **Pod Security:** the namespaces with exception labels match the exceptions table in `conventions.md` exactly.
+- **Policy exemptions:** every binding exempts exactly `kube-system` and `flux-system`, plus `tuppr` on `memory-limit-equals-request` only (ADR-0037).
 - **VAP audit/warn events** (`kubectl get events -A --field-selector reason=FailedAdmission` and the API server audit annotations): images without a digest, memory limit ≠ request, CPU limits present.
 - **No** NodePort Services, no non-tailscale Ingresses, no `hostNetwork` outside the documented platform pods.
 - **GitHub:**

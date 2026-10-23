@@ -172,6 +172,25 @@ def check_talos(files):
     return errs
 
 
+TUPPR_UPGRADES = {"talosVersion": ("04-platform/05-operations/tuppr/app/upgrades/talos.yaml", "talos"),
+                  "kubernetesVersion": ("04-platform/05-operations/tuppr/app/upgrades/kubernetes.yaml", "kubernetes")}
+
+
+def check_versions_match(files):
+    """ADR-0023: the versions in 01-talos/cluster.yaml equal the tuppr CRs that roll them out."""
+    if "01-talos/cluster.yaml" not in files:
+        return []
+    cluster = yaml_load(ROOT / "01-talos/cluster.yaml")
+    errs = []
+    for key, (path, field) in TUPPR_UPGRADES.items():
+        if path not in files:
+            continue
+        version = yaml_load(ROOT / path)["spec"][field]["version"]
+        if version != cluster[key]:
+            errs.append(f"{path}: spec.{field}.version {version} != {key} {cluster[key]} in 01-talos/cluster.yaml")
+    return errs
+
+
 def check_component_shape(files):
     errs = []
     for ks in [f for g in COMPONENT_GLOBS for f in matches(g, files)]:
@@ -201,6 +220,25 @@ def check_component_shape(files):
         for ns in namespaces:
             if ns != NAMESPACE_EXCEPTIONS.get(comp, comp):
                 errs.append(f"{comp_dir}: namespace {ns} must equal the folder name ({comp}) (ADR-0003 rule 4)")
+    return errs
+
+
+LOCK_PLATFORMS = ("linux-x64", "macos-arm64", "macos-x64")
+
+
+def check_mise_lock(files):
+    """ADR-0006/ADR-0038: .config/mise.lock pins every tool version in mise.toml, for every platform."""
+    tools = tomllib.loads((ROOT / ".config/mise.toml").read_text())["tools"]
+    lock = tomllib.loads((ROOT / ".config/mise.lock").read_text()).get("tools", {})
+    errs = []
+    for name, version in tools.items():
+        entry = next((e for e in lock.get(name, []) if e.get("version") == version), None)
+        if entry is None:
+            errs.append(f"{name} {version} is not in .config/mise.lock: run `mise lock --platform {','.join(LOCK_PLATFORMS)}`")
+            continue
+        missing = [pl for pl in LOCK_PLATFORMS if f"platforms.{pl}" not in entry]
+        if missing:
+            errs.append(f"{name} {version}: .config/mise.lock has no checksum for {', '.join(missing)}: run `mise lock --platform {','.join(LOCK_PLATFORMS)}`")
     return errs
 
 
@@ -423,8 +461,10 @@ def main():
         "doc-links": check_doc_links(files),
         "no-versions-in-docs": check_no_versions_in_docs(files),
         "talos": check_talos(files),
+        "versions-match": check_versions_match(files),
         "component-shape": check_component_shape(files),
         "orphans": check_orphans(files),
+        "mise-lock": check_mise_lock(files),
         "bootstrap-literals": check_bootstrap_literals(files),
         "render": check_render(files),
         "athena-egress": check_athena_egress(files),

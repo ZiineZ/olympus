@@ -43,4 +43,4 @@ spec:
       matchExpressions:
         - key: kubernetes.io/metadata.name
           operator: NotIn
-          values: [kube-system, flux-system]
+          values: [kube-system, flux-system, tuppr] # tuppr: its upgrade Jobs hard-code 64Mi/512Mi (ADR-0037)

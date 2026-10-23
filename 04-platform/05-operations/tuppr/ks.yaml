@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/kustomization-kustomize-v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tuppr
+  namespace: flux-system
+  annotations:
+    olympus/description: tuppr, the upgrade controller. Moves Talos and Kubernetes to the versions in git, one node at a time, behind health gates.
+    olympus/docs: 00-docs/architecture.md,00-docs/runbooks/05-upgrades.md
+    olympus/adr: "0023,0037"
+spec:
+  interval: 10m
+  path: ./04-platform/05-operations/tuppr/app
+  targetNamespace: tuppr
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+---
+# The target versions are tuppr CRs: they apply once tuppr has created its CRDs.
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tuppr-upgrades
+  namespace: flux-system
+  annotations:
+    olympus/description: The Talos and Kubernetes versions the cluster should run. Must equal 01-talos/cluster.yaml (check versions-match).
+    olympus/docs: 00-docs/runbooks/05-upgrades.md
+    olympus/adr: "0023,0037"
+spec:
+  interval: 10m
+  path: ./04-platform/05-operations/tuppr/app/upgrades
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: tuppr
+---
+# Scrapes and alert rules are VictoriaMetrics CRs: they wait for the observability layer (ADR-0034).
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tuppr-monitoring
+  namespace: flux-system
+  annotations:
+    olympus/description: Scrape and the upgrade-failure alerts for tuppr.
+    olympus/docs: 00-docs/runbooks/04-observability.md
+    olympus/adr: "0034"
+spec:
+  interval: 10m
+  path: ./04-platform/05-operations/tuppr/app/monitoring
+  targetNamespace: tuppr
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: tuppr
+    - name: victoria-metrics

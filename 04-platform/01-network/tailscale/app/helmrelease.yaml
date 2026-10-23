@@ -18,7 +18,8 @@ spec:
         secretName: tailscale-operator-oauth
     operatorConfig:
       image:
-        digest: sha256:38351d6333edc490a832b27b244665d40f4a5fe1765ade76af2264c99dbbfe0e # tailscale/k8s-operator v1.104.1
+        repository: tailscale/k8s-operator
+        tag: v1.104.1@sha256:38351d6333edc490a832b27b244665d40f4a5fe1765ade76af2264c99dbbfe0e
       podLabels:
         app.kubernetes.io/name: tailscale-operator
       hostname: olympus-k8s${TS_HOST_SUFFIX} # kubectl: https://olympus-k8s.<tailnet>.ts.net
@@ -27,7 +28,8 @@ spec:
       resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {memory: 128Mi}}
     proxyConfig:
       image:
-        digest: sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d # tailscale/tailscale v1.104.1
+        repository: tailscale/tailscale
+        tag: v1.104.1@sha256:87c55d6be56ad85b3d8bceca5f87f73de288c609131460dd1be1874c250cc41d
       defaultTags: tag:k8s
       defaultProxyClass: default # ./config/proxyclass.yaml
     apiServerProxyConfig: # in-process, auth mode: tailnet identity -> Kubernetes groups via grants (ADR-0012)

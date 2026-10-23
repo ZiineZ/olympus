@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone-strict/namespace-v1.json
+# Talos grants os:admin API access to this namespace only (01-talos/patches/controlplane/talos-api-access.yaml).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tuppr

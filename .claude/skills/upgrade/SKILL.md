@@ -42,7 +42,9 @@ Policy sources: **ADR-0023** (Renovate and tuppr) and **ADR-0008** (the Kubernet
    - flux-operator + `FluxInstance.distribution.version`
 
    If Renovate split them, comment and ask for a regroup by fixing `.github/renovate.json5` (via `change`).
-6. **Make any required value changes in the same PR** (via `change`). A version bump that needs a config change is one concern.
+6. **Make any required value changes in the same PR** (via `change`). A version bump that needs a config change is one concern. Two bumps always need a follow-up commit (ADR-0038):
+   - **Athena's Dockerfile** (`CLAUDE_CODE_VERSION`, `MISE_VERSION`): put the new release's sha256 in the matching `--checksum`. Claude Code's checksum is in `https://downloads.claude.ai/claude-code-releases/<version>/manifest.json` (`platforms.linux-x64.checksum`); mise's is in the release's `SHASUMS256.txt`. Then pin the HelmRelease to the image the PR builds.
+   - **A mise tool** whose `mise-lock` check fails: run `mise lock --platform linux-x64,macos-arm64,macos-x64` and commit `.config/mise.lock`.
 7. **Post a review comment:**
    - **Risk:** low, medium, or high, and why
    - **What changes for Stan**, in plain words
@@ -59,7 +61,7 @@ Policy sources: **ADR-0023** (Renovate and tuppr) and **ADR-0008** (the Kubernet
 
 ## 4. Talos and Kubernetes upgrades (tuppr)
 
-- The PR changes **both** `01-talos/cluster.yaml` (`talosVersion`/`kubernetesVersion`) and the tuppr CR in `04-platform/05-operations/tuppr/app/`. `versions-match` fails otherwise.
+- The PR changes **both** `01-talos/cluster.yaml` (`talosVersion`/`kubernetesVersion`) and the tuppr CR in `04-platform/05-operations/tuppr/app/upgrades/`. `versions-match` fails otherwise. A Talos bump also moves the `talosctl` image in both CRs and the talosctl pin in `.config/mise.toml` (`talos` check). See `runbooks/05-upgrades.md`.
 - **After merge:** tuppr upgrades one node at a time, gated on all nodes Ready + Flux Ready. Watch, read-only:
   ```bash
   kubectl get talosupgrade,kubernetesupgrade -A

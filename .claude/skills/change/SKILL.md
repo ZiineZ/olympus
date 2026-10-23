@@ -43,7 +43,7 @@ Walk this checklist, which defines what "related" means. Mark every item **chang
 | c | Shared cluster primitives | `03-cluster/cluster-settings.yaml` (a new or renamed `${VAR}`?), `priority-classes.yaml`, `components/`, admission policies (does the change pass them, or need an exception?) |
 | d | Node level | `01-talos/cluster.yaml`, `01-talos/patches/` (sysctls, kubelet, extensions, scrape bind addresses) |
 | e | Bootstrap | Is the component bootstrapped (cilium, flux-operator, flux-instance, Gateway API CRDs)? If so, `02-bootstrap/` reads its files; check that it still renders |
-| f | Upgrades | `.github/renovate.json5`: groups, auto-merge set, regex managers (a new version location?); the tuppr CRs vs `01-talos/cluster.yaml` (`versions-match`) |
+| f | Upgrades | `.github/renovate.json5`: groups, auto-merge set, regex managers (a new version location needs a manager or a `# renovate:` hint, ADR-0038); image blocks written `repository` + `tag@digest`; the tuppr CRs vs `01-talos/cluster.yaml` (`versions-match`) |
 | g | CI and checks | `.github/checks/`, `.github/sync-rules.yaml`, `.github/workflows/` (you can't edit workflows: write the patch into the PR description for Stan) |
 | h | Living docs | `.github/README.md` (front page: stack mind map, roadmap), `00-docs/architecture.md` (which section?), `00-docs/conventions.md`, `00-docs/runbooks/*`, and the paths in `olympus/docs`. `00-docs/inventory.md` is never edited by hand; regenerate it. |
 | i | Decisions | Does this need an ADR? (ADR-0000 §2: a new tool/chart/CRD/external service, a changed convention/default/addressing/security boundary/workflow.) Does it supersede one? Does it adopt an item from the deferred register (ADR-0026)? |

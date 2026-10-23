@@ -23,6 +23,7 @@ spec:
   values:
     instance:
       distribution:
+        # renovate: datasource=github-releases depName=fluxcd/flux2 extractVersion=^v(?<version>.+)$
         version: 2.9.6
         registry: ghcr.io/fluxcd
         artifact: oci://ghcr.io/controlplaneio-fluxcd/flux-operator-manifests:v0.61.0 # pinned: the chart default is :latest

@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tuppr
+spec:
+  interval: 30m
+  chartRef:
+    kind: OCIRepository
+    name: tuppr
+  values:
+    image:
+      tag: 0.5.9
+      digest: sha256:9e5aadff42f6a82ae8f94d14c5d8ff409a085a79d7b8e6a7a7629b34471057ed
+    priorityClassName: platform
+    resources: {requests: {cpu: 20m, memory: 128Mi}, limits: {memory: 128Mi}}
