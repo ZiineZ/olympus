@@ -59,6 +59,7 @@ These steps come later. They are listed here so nothing gets forgotten.
   - router mode behind the repeater, LAN `192.168.50.0/24`, DHCP pool `.100`–`.199` only (ADR-0009)
   - no port forwarding
 - [ ] **Cabling:** zeus's 2.5 GbE port goes to the switch or router. Talos doesn't do Wi-Fi.
+- [ ] **A USB stick** (1 GB or more) for the Talos ISO (runbook 02, part 1).
 - [ ] **zeus BIOS** (ADR-0009):
   - set the UMA frame buffer to the minimum
   - power on after AC loss

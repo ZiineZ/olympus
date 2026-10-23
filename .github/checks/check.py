@@ -166,7 +166,9 @@ def check_talos(files):
             errs.append(f"node {node['name']}: role must be controlplane or worker")
         if f"01-talos/schematics/{node['schematic']}.yaml" not in files:
             errs.append(f"node {node['name']}: schematic file 01-talos/schematics/{node['schematic']}.yaml missing")
-    for f in matches("01-talos/patches/*/*.yaml", files) + matches("01-talos/schematics/*.yaml", files):
+        if node.get("mac") and not re.fullmatch(r"([0-9a-f]{2}:){5}[0-9a-f]{2}", node["mac"]):
+            errs.append(f"node {node['name']}: mac '{node['mac']}' must be lowercase aa:bb:cc:dd:ee:ff (talos:render, ADR-0039)")
+    for f in matches("01-talos/patches/**/*.yaml", files) + matches("01-talos/schematics/*.yaml", files):
         if subprocess.run(["yq", "-e", "true", str(ROOT / f)], capture_output=True).returncode != 0:
             errs.append(f"{f}: not valid YAML")
     return errs
