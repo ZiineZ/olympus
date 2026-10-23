@@ -83,6 +83,13 @@
       prBodyNotes: ["⚠️ Update the matching `--checksum` in the Dockerfile in this PR (runbook 05), or the `athena-image` build fails."],
     },
     {matchUpdateTypes: ["major"], addLabels: ["breaking"]}, // and the upgrade skill's changelog review
+    {
+      // ADR-0008: a new Kubernetes minor only once it reaches .2 and the pinned Talos supports it, which
+      // Renovate can't judge. Talos and Kubernetes minors and majors wait for a tick on the Dependency Dashboard.
+      matchPackageNames: ["/siderolabs\\/talos/", "kubernetes/kubernetes", "/kubernetes\\/kubectl/", "kubectl"],
+      matchUpdateTypes: ["minor", "major"],
+      dependencyDashboardApproval: true,
+    },
     {matchDatasources: ["kubernetes-api"], enabled: false}, // apiVersions move with their charts, not on their own
     {
       // Athena's own image is tagged by commit SHA from this repo's build; its PRs pin it

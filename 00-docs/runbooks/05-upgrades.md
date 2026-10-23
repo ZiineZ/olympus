@@ -33,6 +33,8 @@ A Talos or Kubernetes PR changes four places at once. Renovate's `talos` and `ku
 
 **Order:** Talos first, then Kubernetes, in separate PRs. Kubernetes moves one minor at a time (ADR-0008).
 
+**New minors wait for you.** Renovate lists a Talos or Kubernetes minor in the Dependency Dashboard's *Pending Approval* section and opens no PR until you tick it. Tick a Kubernetes minor only once it has reached `.2` and the pinned Talos supports it. Ask Athena to check both. Patch releases still arrive as normal PRs.
+
 **After merge,** tuppr does this one node at a time:
 1. checks that every node is Ready and every Flux Kustomization is Ready
 2. drains the node
