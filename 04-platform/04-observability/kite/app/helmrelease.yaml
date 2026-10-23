@@ -14,6 +14,7 @@ spec:
     - {kind: Secret, name: kite-secrets, valuesKey: jwt-secret, targetPath: jwtSecret}
   values:
     image:
+      repository: ghcr.io/kite-org/kite
       tag: v0.16.0@sha256:951616cbaf9ce7e1183450bb225114568a9fe5cb486b085e7399a4d453d1a19e
     deploymentStrategy:
       type: Recreate # RWO volume

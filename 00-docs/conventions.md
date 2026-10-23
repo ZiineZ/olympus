@@ -73,7 +73,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 
 - `mise install` provides the whole toolchain.
 - **mise tasks are the only imperative entrypoints.** `mise tasks` lists the ones that exist today. They are defined only in `.config/mise.toml`, and each task is added in the phase that first needs it (target set: ADR-0006).
-- **A tool joins `.config/mise.toml` in the phase that first needs it.** `.config/mise.lock` pins checksums for linux-x64, macos-arm64, and macos-x64. Regenerate it with `mise lock --platform linux-x64,macos-arm64,macos-x64` whenever a version changes.
+- **A tool joins `.config/mise.toml` in the phase that first needs it.** `.config/mise.lock` pins checksums for linux-x64, macos-arm64, and macos-x64. Regenerate it with `mise lock --platform linux-x64,macos-arm64,macos-x64` whenever a version changes. The `mise-lock` check fails if any version or platform is missing ([ADR-0038](decisions/0038-renovate-build-corrections.md)).
 - **CI installs only what the checks run:** `python`, `yq`, `helm`, `kustomize`, `kubeconform`.
 - Check scripts use the Python standard library only.
 
@@ -157,9 +157,11 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 - **New Deny policies** run in Warn/Audit mode for one week before switching to Deny.
 - **Policy exemptions** are matched on the built-in label `kubernetes.io/metadata.name`. Only `kube-system` and `flux-system` are exempt, and they're listed in each binding ([ADR-0031](decisions/0031-storage-and-security-layer-corrections.md)). The one per-policy exception: `tuppr` is exempt from `memory-limit-equals-request`, because its upgrade Jobs hard-code their memory ([ADR-0037](decisions/0037-tuppr-build-corrections.md)).
 
-## Upgrades ([ADR-0023](decisions/0023-upgrades-renovate-tuppr.md), [ADR-0037](decisions/0037-tuppr-build-corrections.md))
+## Upgrades ([ADR-0023](decisions/0023-upgrades-renovate-tuppr.md), [ADR-0037](decisions/0037-tuppr-build-corrections.md), [ADR-0038](decisions/0038-renovate-build-corrections.md))
 
-- **Renovate** runs Saturdays before 06:00 (Europe/Amsterdam), with a minimum release age of 3 days. Related versions are grouped into one PR.
+- **Renovate** runs Saturdays before 06:00 (Europe/Amsterdam), with a minimum release age of 3 days. Related versions are grouped into one PR. Its config is `.github/renovate.json5`.
+- **Every version has a manager or a hint.** Image blocks are written `repository` + `tag: <version>@sha256:<digest>`. A version no manager can infer gets `# renovate: datasource=… depName=…` on the line above it ([ADR-0038](decisions/0038-renovate-build-corrections.md)).
+- **Auto-merge** goes through GitHub's native auto-merge. The Renovate app may bypass `main-approval`, never `main-integrity` (the PR and `validate`).
 - **Never auto-merged:** Talos, Kubernetes, Cilium, Flux, Gateway API, tailscale, cloudflared, k8up, tuppr.
 - **tuppr** performs Talos and Kubernetes upgrades from its CRs, one node at a time, with health gates (all nodes Ready, all Flux Kustomizations Ready). Talos is upgraded before Kubernetes. Its Talos API access is `os:admin` for namespace `tuppr` only ([ADR-0037](decisions/0037-tuppr-build-corrections.md), [runbooks/05-upgrades.md](runbooks/05-upgrades.md)).
 - **Rollback:** `git revert` (Talos A/B rollback is break-glass only).

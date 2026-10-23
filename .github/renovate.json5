@@ -1,0 +1,93 @@
+// Renovate proposes every version bump as a PR (ADR-0023, ADR-0038). Mend-hosted GitHub app.
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: [
+    "config:recommended",
+    "docker:pinDigests",
+    "helpers:pinGitHubActionDigests",
+    ":semanticCommits",
+    ":dependencyDashboard",
+  ],
+  timezone: "Europe/Amsterdam",
+  schedule: ["before 6am on saturday"],
+  prConcurrentLimit: 5,
+  minimumReleaseAge: "3 days", // supply-chain buffer for every update
+  vulnerabilityAlerts: {minimumReleaseAge: null, schedule: ["at any time"]}, // security fixes skip both
+  ignorePaths: ["00-docs/**"],
+  flux: {managerFilePatterns: ["/^(03-cluster|04-platform)/.+\\.ya?ml$/"]},
+  // the flux manager also reads HelmRelease values images (repository + tag@digest); helm-values covers
+  // the same shape in tuppr's CRs (talosctl image)
+  "helm-values": {managerFilePatterns: ["/tuppr/app/upgrades/.+\\.ya?ml$/"]},
+  kubernetes: {managerFilePatterns: ["/^04-platform/.+\\.ya?ml$/"]},
+  customManagers: [
+    {
+      // `# renovate: datasource=… depName=… [extractVersion=…]` on the line above a `key: value` or `ARG X=value`
+      customType: "regex",
+      description: "Renovate hints in YAML and the Athena Dockerfile",
+      managerFilePatterns: ["/\\.ya?ml$/", "/(^|/)Dockerfile$/"],
+      matchStrings: [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)( extractVersion=(?<extractVersion>\\S+))?\\n[^\\n]*?[:=]\\s*\"?(?<currentValue>[^\\s\"#]+)",
+      ],
+      extractVersionTemplate: "{{#if extractVersion}}{{{extractVersion}}}{{else}}^(?<version>.+)${{/if}}",
+    },
+    {
+      customType: "regex",
+      description: "Gateway API CRDs (released together with Cilium's support for them)",
+      managerFilePatterns: ["/gateway-api-crds/app/kustomization\\.yaml$/"],
+      matchStrings: ["github\\.com/(?<depName>kubernetes-sigs/gateway-api)/releases/download/(?<currentValue>v[^/]+)/"],
+      datasourceTemplate: "github-releases",
+    },
+    {
+      customType: "regex",
+      description: "The Flux manifests artifact the FluxInstance installs",
+      managerFilePatterns: ["/flux-instance/app/helmrelease\\.yaml$/"],
+      matchStrings: ["oci://(?<depName>ghcr\\.io/controlplaneio-fluxcd/flux-operator-manifests):(?<currentValue>v[0-9.]+)"],
+      datasourceTemplate: "docker",
+    },
+    {
+      // tag-pinned rule and dashboard sources of the VictoriaMetrics sync job (ADR-0033 rule 7).
+      // The two commit-pinned sources have no releases; they are bumped by hand.
+      customType: "regex",
+      description: "VictoriaMetrics stack: pinned remote rules and dashboards",
+      managerFilePatterns: ["/victoria-metrics/app/helmrelease\\.yaml$/"],
+      matchStrings: ["raw\\.githubusercontent\\.com/(?<depName>[^/]+/[^/]+)/(?<currentValue>v[0-9][^/]*)/"],
+      datasourceTemplate: "github-tags",
+    },
+  ],
+  packageRules: [
+    // --- groups: related versions never split (ADR-0023 rule 5)
+    {groupName: "talos", matchPackageNames: ["/siderolabs\\/talos/"]},
+    {groupName: "kubernetes", matchPackageNames: ["kubernetes/kubernetes", "/kubernetes\\/kubectl/", "kubectl"]},
+    {groupName: "cilium", matchPackageNames: ["/cilium/", "kubernetes-sigs/gateway-api"]},
+    {groupName: "flux", matchPackageNames: ["/fluxcd/", "flux2"]},
+    {groupName: "victoria-metrics", matchFileNames: ["04-platform/04-observability/victoria-metrics/**"]},
+    {groupName: "tailscale", matchFileNames: ["04-platform/01-network/tailscale/**"]},
+    {groupName: "k8up", matchFileNames: ["04-platform/02-storage/k8up/**"]},
+    {groupName: "mise", matchPackageNames: ["jdx/mise", "jdx/mise-action"]},
+
+    // --- auto-merge after `validate` passes (ADR-0023 rule 6)
+    {matchDatasources: ["docker"], matchUpdateTypes: ["digest", "patch"], automerge: true},
+    {matchManagers: ["github-actions"], matchUpdateTypes: ["minor", "patch", "digest", "pinDigest"], automerge: true},
+    {matchManagers: ["mise"], matchUpdateTypes: ["patch"], automerge: true},
+
+    // --- never auto-merged: the platform-critical set (ADR-0023 rule 6); later rules win
+    {
+      matchPackageNames: ["/siderolabs/", "kubernetes/kubernetes", "/kubectl/", "/cilium/", "/fluxcd/", "flux2",
+                          "/gateway-api/", "/tailscale/", "/cloudflared/", "/k8up/", "/tuppr/"],
+      automerge: false,
+    },
+    {
+      // the Dockerfile pins each download by checksum, which Renovate can't compute
+      matchFileNames: ["04-platform/06-agent/athena/image/Dockerfile"],
+      automerge: false,
+      prBodyNotes: ["⚠️ Update the matching `--checksum` in the Dockerfile in this PR (runbook 05), or the `athena-image` build fails."],
+    },
+    {matchUpdateTypes: ["major"], addLabels: ["breaking"]}, // and the upgrade skill's changelog review
+    {matchDatasources: ["kubernetes-api"], enabled: false}, // apiVersions move with their charts, not on their own
+    {
+      // Athena's own image is tagged by commit SHA from this repo's build; its PRs pin it
+      matchPackageNames: ["ghcr.io/ziinez/athena"],
+      enabled: false,
+    },
+  ],
+}

@@ -2,7 +2,10 @@
 # Athena: Claude Code plus the repo's own toolchain (ADR-0024). Built from the repo root by .github/workflows/athena-image.yaml.
 FROM docker.io/library/debian:trixie-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad
 
+# Renovate bumps these versions; the PR must also update the matching --checksum below (runbook 05)
+# renovate: datasource=npm depName=@anthropic-ai/claude-code
 ARG CLAUDE_CODE_VERSION=2.1.303
+# renovate: datasource=github-releases depName=jdx/mise extractVersion=^v(?<version>.+)$
 ARG MISE_VERSION=2026.10.15
 
 RUN apt-get update \

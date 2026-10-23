@@ -1,6 +1,6 @@
 # ADR-0023: Upgrades: Renovate proposes, tuppr executes Talos and Kubernetes upgrades
 
-- **Status:** Accepted (the tuppr section made concrete by ADR-0037)
+- **Status:** Accepted (the tuppr section made concrete by ADR-0037, the Renovate section by ADR-0038)
 - **Date:** 2026-10-20
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0004, ADR-0005, ADR-0006, ADR-0008, ADR-0013
