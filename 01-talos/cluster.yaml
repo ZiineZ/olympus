@@ -1,16 +1,23 @@
 # yaml-language-server: $schema=https://json.schemastore.org/any.json
 # Single source of the Talos cluster: versions, endpoint and node inventory (ADR-0004, ADR-0028).
 # Read by the mise talos/rehearsal tasks with yq. Patches apply by folder: patches/global to every
-# node, patches/<role> to that role. Each node's schematic lives in schematics/<schematic>.yaml.
+# node, patches/<role> to that role, patches/metal/<role> on real hardware only (ADR-0039). Each node's
+# schematic lives in schematics/<schematic>.yaml; its hostname, address, VIP and disk come from its entry here.
 # renovate: datasource=github-releases depName=siderolabs/talos
 talosVersion: v1.14.4 # must equal the talosctl pin in .config/mise.toml (check: talos)
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
 kubernetesVersion: v1.36.5 # ADR-0008 version policy; kubectl stays within one minor (check: talos)
 endpoint: https://192.168.50.10:6443 # the VIP, never a node IP (ADR-0008)
+# The LAN every node is wired to (ADR-0009). Static addresses only: no DHCP reservations outside git.
+network:
+  prefix: 24
+  gateway: 192.168.50.1 # the router
+  nameservers: [1.1.1.1, 9.9.9.9] # public resolvers, so DNS doesn't depend on the router
 
 nodes:
   - name: zeus
     ip: 192.168.50.11
     role: controlplane
     schematic: zeus
-    installDisk: nvme # Talos install disk selector (type)
+    installDisk: nvme # the install disk's transport (nvme, sata, …): UnattendedInstallConfig matches disk.transport
+    mac: "" # the NIC's permanent address, from the live boot: talosctl get links --insecure -n <address>

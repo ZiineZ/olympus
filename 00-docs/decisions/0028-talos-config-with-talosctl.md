@@ -1,6 +1,6 @@
 # ADR-0028: Render Talos config with plain talosctl (talhelper is archived)
 
-- **Status:** Accepted
+- **Status:** Accepted (rule 5 implemented by ADR-0039)
 - **Date:** 2026-10-21
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0003 (supersedes `talconfig.yaml` in its tree), ADR-0006 (supersedes `talhelper` in its tool list), ADR-0007 (supersedes rule 2's renderer), ADR-0023
