@@ -61,6 +61,8 @@ Policy sources: **ADR-0023** (Renovate and tuppr) and **ADR-0008** (the Kubernet
 
 ## 4. Talos and Kubernetes upgrades (tuppr)
 
+- **Minors and majors** sit in the Dependency Dashboard's *Pending Approval* until Stan ticks them (`.github/renovate.json5`). When asked, check the ADR-0008 bar: the minor has a `.2` or later patch, and the Talos support matrix for the pinned Talos lists it. Then tell Stan whether to tick it.
+
 - The PR changes **both** `01-talos/cluster.yaml` (`talosVersion`/`kubernetesVersion`) and the tuppr CR in `04-platform/05-operations/tuppr/app/upgrades/`. `versions-match` fails otherwise. A Talos bump also moves the `talosctl` image in both CRs and the talosctl pin in `.config/mise.toml` (`talos` check). See `runbooks/05-upgrades.md`.
 - **After merge:** tuppr upgrades one node at a time, gated on all nodes Ready + Flux Ready. Watch, read-only:
   ```bash
