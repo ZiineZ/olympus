@@ -6,7 +6,7 @@ Athena is Claude Code in a pod (ADR-0024). It reads the cluster, opens PRs as `a
 
 Open the **Claude desktop app → Code**, the Claude mobile app (**Code**), or [claude.ai/code](https://claude.ai/code), and pick the session **athena**. It shows a computer icon with a green dot while the pod is up.
 
-- **New session:** start a new session on `athena` from the session list. The pod serves up to 4 at once, all working in `~/olympus`.
+- **New session:** start a new session on `athena` from the session list. The pod serves up to 2 at once (`ATHENA_SESSIONS`), all working in `~/olympus`.
 - **Tool approvals** appear in the app. Approving one can't give Athena more power than its RBAC, GitHub App and network policy allow.
 - **Before starting work,** ask it to `git pull` if `main` moved.
 - **Its PRs need your approval.** It cannot merge, push to `main`, or change workflows.
@@ -54,7 +54,7 @@ The GitHub key is read only when the pod starts. In the same PR, bump `kubectl.k
 |---|---|
 | no **athena** session in the app | the pod isn't Running (`kubectl -n athena get pods`), or the sign-in hasn't been done (`athena-setup`) |
 | `kubectl -n athena logs deploy/athena` says it must be logged in, or needs a full-scope login | the login was revoked or expired: run `athena-setup` |
-| `OOMKilled` in `kubectl -n athena get pods` | sessions grew past 2 Gi. That's the limit working; the pod restarts and Remote Control comes back by itself. |
+| `OOMKilled` in `kubectl -n athena get pods` | sessions grew past 1.5 Gi. That's the limit working; the pod restarts and Remote Control comes back by itself. |
 | `git push` or `gh` fails with 401/403 | the app's key was removed, or the app is no longer installed on `olympus` |
 | it can't reach a site | by design: egress is limited to Anthropic, GitHub, the chart sources, the API server, VMSingle and Hubble Relay (`athena-egress`). Hubble shows the drop. |
 
