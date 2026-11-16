@@ -86,7 +86,7 @@ spec:
       resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {memory: 128Mi}} # calibration knob (ADR-0040)
     rollOutCiliumPods: true
     # memory request = limit, no CPU limit (ADR-0022); calibration knobs, re-sized from metrics
-    resources: {requests: {cpu: 100m, memory: 512Mi}, limits: {memory: 512Mi}}
+    resources: {requests: {cpu: 100m, memory: 384Mi}, limits: {memory: 384Mi}} # rehearsal peak 184Mi (ADR-0040)
     envoy:
       rollOutPods: true
       resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {memory: 128Mi}}
