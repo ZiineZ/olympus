@@ -23,7 +23,6 @@ Stan asked to keep every feature and only tune settings.
    | Workload | Before | After | Why it's safe |
    |---|---|---|---|
    | VMSingle | 768 Mi | 384 Mi | VictoriaMetrics sizes its caches from its own memory limit (60% by default). Olympus's few tens of thousands of active series need far less. |
-   | VMAgent | 256 Mi | 192 Mi | its buffers scale with series per scrape; the largest target, the API server, stays well within this |
    | VMAlert | 128 Mi | 96 Mi | it holds rule state for a few dozen groups |
    | Cilium operator | 256 Mi | 128 Mi | on one to a few nodes it manages a handful of IPs and leases |
    | Hubble Relay | 128 Mi | 64 Mi | it only relays flows from one or a few agents |

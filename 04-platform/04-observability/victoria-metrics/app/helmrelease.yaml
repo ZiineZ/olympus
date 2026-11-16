@@ -35,11 +35,9 @@ spec:
     vmagent:
       spec:
         scrapeInterval: 30s
-        extraArgs:
-          promscrape.streamParse: "true" # parse big scrapes (the API server's) in chunks instead of all in memory (ADR-0040)
         configReloaderResources: {requests: {cpu: 10m, memory: 32Mi}, limits: {memory: 32Mi}} # operator-injected sidecar + init (ADR-0022)
         priorityClassName: platform
-        resources: {requests: {cpu: 50m, memory: 192Mi}, limits: {memory: 192Mi}} # calibration knob (ADR-0040)
+        resources: {requests: {cpu: 50m, memory: 256Mi}, limits: {memory: 256Mi}} # OOMKilled at 192Mi in the rehearsal (ADR-0040)
     vmalert:
       spec:
         priorityClassName: platform
