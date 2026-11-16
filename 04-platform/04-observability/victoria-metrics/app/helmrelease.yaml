@@ -108,6 +108,7 @@ spec:
         resources: {requests: {cpu: 10m, memory: 96Mi}, limits: {memory: 96Mi}} # the dashboards sidecar, and the datasources init container
         datasources:
           initDatasources: true # the datasources never change at runtime: load them once at start instead of a resident sidecar (ADR-0040)
+          watchMethod: LIST # list once and exit; the default WATCH never exits, so Grafana would never start
         dashboards:
           searchNamespace: ALL # dashboards live next to the component they show (ADR-0003 rule 6)
     kube-state-metrics:
