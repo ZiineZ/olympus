@@ -31,7 +31,7 @@ spec:
           app:
             image:
               repository: ghcr.io/ziinez/athena
-              tag: d6b431ea0be080f651e8e3a12cbd3754f1148b20@sha256:5ff7ed66e5038aabafa439fd23b6410697e70963d139d9e7da50ddafcfe801ef
+              tag: b7e4d85c05bacc19013d3dc7ec560240d21740d9@sha256:5ab823c14a3f68de4ca4087b70d88a09d42672aa00ca439066ed127d003f497c
             env:
               ANTHROPIC_MODEL: claude-opus-5-5
               ATHENA_REPO: ZiineZ/olympus
