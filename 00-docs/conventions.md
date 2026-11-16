@@ -134,7 +134,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 
 ## Admission and workloads ([ADR-0021](decisions/0021-admission-policy.md), [ADR-0022](decisions/0022-workload-standards.md))
 
-- **Resources:** every container sets a CPU request, a memory request, and a memory limit, with **memory limit = request** and **no CPU limit**.
+- **Resources:** every container sets a CPU request, a memory request, and a memory limit, with **memory limit = request** and **no CPU limit**. Sizes are calibration knobs, set from measured usage: the `audit` skill's rightsizing pass, with p99 × 1.2 ([ADR-0040](decisions/0040-memory-right-sizing.md)).
 - **PriorityClasses:**
   - built-in `system-cluster-critical`: Flux. It must exist before Flux does ([ADR-0029](decisions/0029-bootstrap-layer-corrections.md)).
   - `platform-critical`: cloudflared, tailscale
@@ -175,7 +175,7 @@ These are the operative rules of Olympus. Each rule links to the ADR that decide
 - **Write access:** git PRs only, through the GitHub App, with no `workflows` permission. Athena cannot merge.
 - **Egress:** only the Anthropic API, GitHub, the chart sources (read-only, so `mise run check` works in its pod), the kube-apiserver, VMSingle, and Hubble Relay. The `athena-egress` check fails when a chart source is missing from `athena-egress` ([ADR-0035](decisions/0035-athena-build-corrections.md)).
 - **Its guardrails bind every Claude Code session in this repo:** `.claude/settings.json` denies cluster writes, `talosctl`, decryption and force pushes, and its hook runs `mise run check` before any `git push` or `gh pr create`.
-- **Memory:** a 2Gi limit, with PriorityClass `agent`.
+- **Memory:** a 1.5Gi limit for 2 Remote Control sessions (`ATHENA_SESSIONS`), with PriorityClass `agent` ([ADR-0040](decisions/0040-memory-right-sizing.md)).
 - Every change goes through the `change` skill. The `olympus` skill is the entrypoint.
 
 ## Recovery ([ADR-0025](decisions/0025-disaster-recovery-and-rehearsal.md))

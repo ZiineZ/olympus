@@ -53,7 +53,7 @@ spec:
       relay:
         enabled: true
         priorityClassName: platform
-        resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {memory: 128Mi}}
+        resources: {requests: {cpu: 50m, memory: 64Mi}, limits: {memory: 64Mi}} # calibration knob (ADR-0040)
       ui:
         enabled: true
         priorityClassName: platform
@@ -83,10 +83,10 @@ spec:
       dashboards:
         enabled: true
       rollOutPods: true
-      resources: {requests: {cpu: 50m, memory: 256Mi}, limits: {memory: 256Mi}}
+      resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {memory: 128Mi}} # calibration knob (ADR-0040)
     rollOutCiliumPods: true
     # memory request = limit, no CPU limit (ADR-0022); calibration knobs, re-sized from metrics
-    resources: {requests: {cpu: 100m, memory: 512Mi}, limits: {memory: 512Mi}}
+    resources: {requests: {cpu: 100m, memory: 384Mi}, limits: {memory: 384Mi}} # rehearsal peak 184Mi (ADR-0040)
     envoy:
       rollOutPods: true
       resources: {requests: {cpu: 50m, memory: 128Mi}, limits: {memory: 128Mi}}

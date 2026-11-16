@@ -1,6 +1,6 @@
 # ADR-0036: Talk to Athena through Claude Remote Control
 
-- **Status:** Accepted
+- **Status:** Accepted (the session capacity amended by ADR-0040)
 - **Date:** 2026-10-22
 - **Deciders:** Stan (owner), Claude (proposer)
 - **Related:** ADR-0024 (amends rules 1 and 5), ADR-0026 (adopts "Web terminal for Athena (phone)"), ADR-0035

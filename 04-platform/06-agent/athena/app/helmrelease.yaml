@@ -31,15 +31,17 @@ spec:
           app:
             image:
               repository: ghcr.io/ziinez/athena
-              tag: d6b431ea0be080f651e8e3a12cbd3754f1148b20@sha256:5ff7ed66e5038aabafa439fd23b6410697e70963d139d9e7da50ddafcfe801ef
+              tag: b7e4d85c05bacc19013d3dc7ec560240d21740d9@sha256:5ab823c14a3f68de4ca4087b70d88a09d42672aa00ca439066ed127d003f497c
             env:
               ANTHROPIC_MODEL: claude-opus-5-5
               ATHENA_REPO: ZiineZ/olympus
               ATHENA_GITHUB_APP_ID: "5423524" # not secret: the private key is what grants access
+              ATHENA_SESSIONS: "2" # Remote Control sessions at once; sized with the memory limit below (ADR-0040)
               # No Claude token here: Remote Control needs a full claude.ai login, made once with athena-setup
               # and kept on the athena-home volume (ADR-0036)
-            # A runaway session is OOMKilled inside this limit instead of starving the node (ADR-0024 rule 2)
-            resources: {requests: {cpu: 500m, memory: 2Gi}, limits: {memory: 2Gi}}
+            # A runaway session is OOMKilled inside this limit instead of starving the node (ADR-0024 rule 2).
+            # Calibration knob, sized for ATHENA_SESSIONS (ADR-0040).
+            resources: {requests: {cpu: 500m, memory: 1536Mi}, limits: {memory: 1536Mi}}
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
